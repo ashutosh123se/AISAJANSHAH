@@ -5,34 +5,41 @@ const crypto = require('crypto');
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const STORE_PATH = path.join(DATA_DIR, 'local-store.json');
 
+const STUDENT_EMAIL = 'ashutoshshekhar37@gmail.com';
+const STUDENT_PASSWORD = 'Ashutosh@1234sa';
+/** Common typo and historical aliases for the demo student email */
+const STUDENT_EMAIL_ALIASES = [
+  'ashutoshshrkhar37@gmail.com',
+  'ashutoshshekhar32@gmail.com',
+  'ashutoshshekhar052@gmail.com',
+];
+
 const defaultStore = () => ({
   users: {
     'local-admin-001': {
       id: 'local-admin-001',
-      email: 'ashutoshshekhar37@gmail.com',
-      name: 'Ashutosh Shekhar',
-      role: 'student',
+      email: 'admin@aisajanshah.com',
+      name: 'Platform Admin',
+      role: 'admin',
       status: 'active',
-      password: 'Ashutosh@1234sa',
+      password: 'Admin@1234sa',
       onboardingComplete: true,
       onboardingCompleted: true,
-      xp: 120,
-      level: 3,
       createdAt: new Date().toISOString(),
     },
-    'local-student-001': {
-      id: 'local-student-001',
-      email: 'sharma.dhruv@mca.christuniversity.in',
-      name: 'Dhruv Sharma',
+    'local-student-demo': {
+      id: 'local-student-demo',
+      email: STUDENT_EMAIL,
+      name: 'Ashutosh Shekhar',
       phone: '',
       workshop: 'Memory Workshop',
       role: 'student',
       status: 'active',
-      password: 'Password@123',
+      password: STUDENT_PASSWORD,
       onboardingComplete: true,
       onboardingCompleted: true,
-      xp: 40,
-      level: 1,
+      xp: 120,
+      level: 3,
       createdAt: new Date().toISOString(),
     },
   },
@@ -40,9 +47,57 @@ const defaultStore = () => ({
 });
 
 const SEED_PASSWORDS = {
-  'ashutoshshekhar37@gmail.com': 'Ashutosh@1234sa',
-  'sharma.dhruv@mca.christuniversity.in': 'Password@123',
+  [STUDENT_EMAIL]: STUDENT_PASSWORD,
+  'admin@aisajanshah.com': 'Admin@1234sa',
 };
+
+function ensureDemoAccounts(store) {
+  let changed = false;
+
+  const ashutoshEmails = [STUDENT_EMAIL, ...STUDENT_EMAIL_ALIASES];
+
+  // Update any existing Ashutosh accounts in store to student role with STUDENT_PASSWORD
+  for (const u of Object.values(store.users)) {
+    if (ashutoshEmails.includes(u.email?.toLowerCase())) {
+      if (u.role === 'admin') {
+        u.role = 'student';
+        changed = true;
+      }
+      if (u.password !== STUDENT_PASSWORD) {
+        u.password = STUDENT_PASSWORD;
+        changed = true;
+      }
+      if (!u.onboardingComplete) {
+        u.onboardingComplete = true;
+        u.onboardingCompleted = true;
+        changed = true;
+      }
+      if (u.name === 'Admin Ashutosh') {
+        u.name = 'Ashutosh Shekhar';
+        changed = true;
+      }
+    }
+  }
+
+  // Ensure primary demo student account exists
+  let student = Object.values(store.users).find(
+    (u) => u.email?.toLowerCase() === STUDENT_EMAIL
+  );
+
+  if (!student) {
+    store.users['local-student-demo'] = defaultStore().users['local-student-demo'];
+    changed = true;
+  }
+
+  // Ensure dedicated platform admin account exists
+  const admin = Object.values(store.users).find((u) => u.role === 'admin');
+  if (!admin) {
+    store.users['local-admin-001'] = defaultStore().users['local-admin-001'];
+    changed = true;
+  }
+
+  return changed;
+}
 
 function ensureStore() {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -54,7 +109,11 @@ function ensureStore() {
 function readStore() {
   ensureStore();
   try {
-    return JSON.parse(fs.readFileSync(STORE_PATH, 'utf8'));
+    const store = JSON.parse(fs.readFileSync(STORE_PATH, 'utf8'));
+    if (ensureDemoAccounts(store)) {
+      writeStore(store);
+    }
+    return store;
   } catch {
     const fresh = defaultStore();
     writeStore(fresh);
@@ -263,8 +322,16 @@ function completeOnboarding(uid, { name, onboardingData }) {
   return toPublicProfile(store.users[uid]);
 }
 
-function authenticateLocal(email, password) {
+function resolveLoginEmail(email) {
   const normalized = String(email || '').trim().toLowerCase();
+  if (STUDENT_EMAIL_ALIASES.includes(normalized)) {
+    return STUDENT_EMAIL;
+  }
+  return normalized;
+}
+
+function authenticateLocal(email, password) {
+  const normalized = resolveLoginEmail(email);
   const pass = String(password ?? '');
   const store = readStore();
   const user = Object.values(store.users).find(
@@ -303,6 +370,45 @@ function authenticateLocal(email, password) {
   return toPublicProfile(user);
 }
 
+function updateScore(uid, xpGained) {
+  const store = readStore();
+  const existing = store.users[uid];
+  if (!existing) {
+    const err = new Error('User not found');
+    err.code = 'not-found';
+    throw err;
+  }
+
+  const currentXp = existing.xp || 0;
+  const newXp = currentXp + xpGained;
+  const newLevel = Math.floor(newXp / 100) + 1;
+
+  let currentTrajectory = existing.goalTrajectory || [
+    { week: 'W1', completion: 0 },
+    { week: 'W2', completion: 0 },
+    { week: 'W3', completion: 0 },
+    { week: 'W4', completion: 0 },
+    { week: 'W5', completion: 0 },
+  ];
+
+  const weekIndex = Math.min(Math.floor(newXp / 200), 4);
+  currentTrajectory[weekIndex].completion = Math.min(
+    currentTrajectory[weekIndex].completion + xpGained / 10,
+    100
+  );
+
+  store.users[uid] = {
+    ...existing,
+    xp: newXp,
+    level: newLevel,
+    goalTrajectory: currentTrajectory,
+    updatedAt: new Date().toISOString(),
+  };
+
+  writeStore(store);
+  return { xp: newXp, level: newLevel, goalTrajectory: currentTrajectory };
+}
+
 module.exports = {
   listStudents,
   getUser,
@@ -315,4 +421,6 @@ module.exports = {
   isLocalAdmin,
   authenticateLocal,
   completeOnboarding,
+  updateScore,
 };
+

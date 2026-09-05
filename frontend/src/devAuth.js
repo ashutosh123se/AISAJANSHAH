@@ -1,7 +1,6 @@
 /**
- * Local auth fallback when Firebase .env is not configured.
- * Active only while Vite runs in development (import.meta.env.DEV).
- * Newly created students authenticate via backend local store + generated password.
+ * Server-backed local auth (no Firebase).
+ * Works in local dig and on Cloudways when VITE_API_BASE_URL points at the API.
  */
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
@@ -9,6 +8,7 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 const STORAGE_KEY = 'aisajan_local_session';
 const LEGACY_KEYS = ['aisajan_dig_session', 'aisajan_dev_session'];
 
+/** Always on — this app uses server auth, not Firebase. */
 export const isDevAuthEnabled = true;
 
 function normalizeProfile(user) {
@@ -24,6 +24,7 @@ function normalizeProfile(user) {
     workshop: user.workshop || '',
     onboardingComplete: Boolean(user.onboardingComplete || user.onboardingCompleted),
     onboardingCompleted: Boolean(user.onboardingComplete || user.onboardingCompleted),
+    onboardingData: user.onboardingData || null,
     xp: user.xp || 0,
     level: user.level || 1,
   };
@@ -40,7 +41,6 @@ export const getDevSession = () => {
     }
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    // Legacy sessions stored only an email string
     if (typeof parsed === 'string') return null;
     return normalizeProfile(parsed);
   } catch {
@@ -60,7 +60,9 @@ export async function devLogin(email, password) {
       body: JSON.stringify({ email: normalized, password: pass }),
     });
   } catch {
-    throw new Error('Cannot reach the API. Make sure the backend is running on port 5000.');
+    throw new Error(
+      'Cannot reach the API. Check that the backend is running and VITE_API_BASE_URL is set correctly.'
+    );
   }
 
   const data = await response.json().catch(() => ({}));
@@ -80,4 +82,10 @@ export async function devLogin(email, password) {
 export function devLogout() {
   localStorage.removeItem(STORAGE_KEY);
   LEGACY_KEYS.forEach((key) => localStorage.removeItem(key));
+}
+
+export function updateLocalSession(profile) {
+  const next = normalizeProfile(profile);
+  if (!next) return;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
 }

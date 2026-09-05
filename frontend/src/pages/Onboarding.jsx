@@ -1,9 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db, isFirebaseConfigured } from '../firebase';
-import { isDevAuthEnabled } from '../devAuth';
 import { apiFetch } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
 import { ChevronLeft, Check } from 'lucide-react';
@@ -54,32 +51,20 @@ const Onboarding = () => {
         }
       };
 
-      const useLocal = isDevAuthEnabled && !isFirebaseConfigured;
-
-      if (useLocal) {
-        const response = await apiFetch('/api/student/onboarding', {
-          method: 'POST',
-          body: JSON.stringify({
-            name: updateData.name,
-            onboardingData: updateData.onboardingData,
-          }),
-        });
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          throw new Error(data.error || data.details || 'Failed to save onboarding');
-        }
-        const nextProfile = { ...userProfile, ...updateData, ...(data.user || {}) };
-        setUserProfile(nextProfile);
-        localStorage.setItem('aisajan_local_session', JSON.stringify(nextProfile));
-      } else {
-        if (!db) {
-          throw new Error('Firebase is not configured. Cannot save onboarding.');
-        }
-        const userRef = doc(db, 'users', userProfile.uid);
-        await updateDoc(userRef, updateData);
-        setUserProfile({ ...userProfile, ...updateData });
+      const response = await apiFetch('/api/student/onboarding', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: updateData.name,
+          onboardingData: updateData.onboardingData,
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || data.details || 'Failed to save onboarding');
       }
-      
+      const nextProfile = { ...userProfile, ...updateData, ...(data.user || {}) };
+      setUserProfile(nextProfile);
+
       navigate('/student');
     } catch (err) {
       console.error("Error saving onboarding data:", err);

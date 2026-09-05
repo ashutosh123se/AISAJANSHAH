@@ -5,8 +5,6 @@ export const defaultAuthState = {
   isAdmin: false,
   loading: true,
   error: '',
-  isFirebaseConfigured: false,
-  isDevAuth: false,
   login: async () => {
     throw new Error('Auth is not ready. Please reload the page.');
   },

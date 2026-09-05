@@ -12,7 +12,6 @@
   "dependencies": {
     "@sendgrid/mail": "^8.1.6",
     "@tailwindcss/postcss": "^4.3.0",
-    "firebase": "^12.13.0",
     "framer-motion": "^12.40.0",
     "lucide-react": "^1.16.0",
     "papaparse": "^5.5.3",

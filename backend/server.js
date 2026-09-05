@@ -3,14 +3,13 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 
-const { db, auth: adminAuth, isFirebaseConfigured } = require('./firebase-admin');
 const verifyToken = require('./middleware/verifyToken');
 const adminOnly = require('./middleware/adminOnly');
 const openAIService = require('./services/openai');
 const emailService = require('./services/sendgrid');
 const localStore = require('./services/localStore');
 
-const useLocalAdmin = !isFirebaseConfigured || !db || !adminAuth;
+/** App runs with server-backed JSON store — no Firebase. */
 
 const app = express();
 
@@ -23,15 +22,9 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok', message: 'API is running' });
 });
 
-// Dig / local login (used when Firebase is not configured)
+// Email/password login (server store — no Firebase)
 app.post('/api/auth/local-login', async (req, res) => {
   try {
-    if (!useLocalAdmin) {
-      return res.status(400).json({
-        error: 'Local login is only available when Firebase Admin is not configured.',
-      });
-    }
-
     const { email, password } = req.body || {};
     if (!email || password === undefined || password === null) {
       return res.status(400).json({ error: 'Email and password are required' });
@@ -153,45 +146,14 @@ Extract at least 4-6 concepts and map them. Make the story truly memorable and c
 app.post('/api/braingym/score', verifyToken, async (req, res) => {
   try {
     const { xpGained } = req.body;
-    
+
     if (!xpGained || typeof xpGained !== 'number') {
       return res.status(400).json({ error: 'Invalid XP amount' });
     }
 
     const uid = req.user.uid;
-    const userRef = db.collection('users').doc(uid);
-    const userDoc = await userRef.get();
-
-    if (!userDoc.exists) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    const userData = userDoc.data();
-    const currentXp = userData.xp || 0;
-    const currentLevel = userData.level || 1;
-
-    const newXp = currentXp + xpGained;
-    // Simple leveling formula: Level 1 = 0-99 XP, Level 2 = 100-199 XP, etc.
-    const newLevel = Math.floor(newXp / 100) + 1;
-    
-    // Goal Trajectory Logic: Update W1, W2, etc. based on XP
-    // Every 10 XP = 1% completion. Grouped into 5 weeks for simplicity.
-    let currentTrajectory = userData.goalTrajectory || [
-      { week: 'W1', completion: 0 }, { week: 'W2', completion: 0 }, { week: 'W3', completion: 0 },
-      { week: 'W4', completion: 0 }, { week: 'W5', completion: 0 }
-    ];
-    
-    // We boost the current active week by the xpGained / 10
-    const weekIndex = Math.min(Math.floor((newXp / 200)), 4); // Max week 5
-    currentTrajectory[weekIndex].completion = Math.min(currentTrajectory[weekIndex].completion + (xpGained / 10), 100);
-
-    await userRef.update({ 
-      xp: newXp, 
-      level: newLevel,
-      goalTrajectory: currentTrajectory
-    });
-
-    res.status(200).json({ xp: newXp, level: newLevel, goalTrajectory: currentTrajectory });
+    const result = localStore.updateScore(uid, xpGained);
+    res.status(200).json(result);
   } catch (error) {
     console.error('Brain Gym Score Error:', error);
     res.status(500).json({ error: 'Failed to update score', details: error.message });
@@ -239,42 +201,7 @@ You MUST return a JSON object with the exact following structure:
 
 app.get('/api/admin/stats', verifyToken, adminOnly, async (req, res) => {
   try {
-    if (useLocalAdmin) {
-      return res.status(200).json(localStore.getStats());
-    }
-
-    const usersSnapshot = await db.collection('users').get();
-    
-    let totalStudents = 0;
-    let newThisMonth = 0;
-    
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-
-    usersSnapshot.forEach(doc => {
-      const data = doc.data();
-      if (data.role !== 'admin') {
-        totalStudents++;
-        
-        if (data.createdAt) {
-          const createdDate = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
-          if (createdDate.getMonth() === currentMonth && createdDate.getFullYear() === currentYear) {
-            newThisMonth++;
-          }
-        }
-      }
-    });
-
-    const emailsSnapshot = await db.collection('email_logs').get();
-    const emailsSent = emailsSnapshot.size;
-
-    res.status(200).json({
-      totalStudents,
-      activeThisWeek: Math.floor(totalStudents * 0.8), // Placeholder heuristic
-      emailsSent,
-      newThisMonth
-    });
+    return res.status(200).json(localStore.getStats());
   } catch (error) {
     console.error('Stats error:', error);
     res.status(500).json({ error: 'Failed to fetch stats' });
@@ -283,16 +210,7 @@ app.get('/api/admin/stats', verifyToken, adminOnly, async (req, res) => {
 
 app.get('/api/admin/students', verifyToken, adminOnly, async (req, res) => {
   try {
-    if (useLocalAdmin) {
-      return res.status(200).json(localStore.listStudents());
-    }
-
-    const usersSnapshot = await db.collection('users').where('role', '!=', 'admin').get();
-    const students = [];
-    usersSnapshot.forEach(doc => {
-      students.push({ id: doc.id, ...doc.data() });
-    });
-    res.status(200).json(students);
+    return res.status(200).json(localStore.listStudents());
   } catch (error) {
     console.error('Fetch students error:', error);
     res.status(500).json({ error: 'Failed to fetch students' });
@@ -307,79 +225,26 @@ app.post('/api/admin/students', verifyToken, adminOnly, async (req, res) => {
       return res.status(400).json({ error: 'Email, password, and name are required' });
     }
 
-    if (useLocalAdmin) {
-      try {
-        const created = localStore.createStudent({
-          email,
-          password,
-          name,
-          phone,
-          workshop,
-          sendEmail,
-        });
-        return res.status(201).json({
-          message: 'Student created successfully',
-          uid: created.uid,
-          emailStatus: created.emailStatus,
-        });
-      } catch (err) {
-        if (err.code === 'already-exists') {
-          return res.status(409).json({ error: 'Failed to create student', details: err.message });
-        }
-        throw err;
+    try {
+      const created = localStore.createStudent({
+        email,
+        password,
+        name,
+        phone,
+        workshop,
+        sendEmail,
+      });
+      return res.status(201).json({
+        message: 'Student created successfully',
+        uid: created.uid,
+        emailStatus: created.emailStatus,
+      });
+    } catch (err) {
+      if (err.code === 'already-exists') {
+        return res.status(409).json({ error: 'Failed to create student', details: err.message });
       }
+      throw err;
     }
-
-    // Create user in Firebase Auth
-    const userRecord = await adminAuth.createUser({
-      email,
-      password,
-      displayName: name,
-    });
-
-    // Save to Firestore
-    await db.collection('users').doc(userRecord.uid).set({
-      email,
-      name,
-      phone: phone || '',
-      workshop: workshop || '',
-      role: 'student',
-      status: 'active',
-      createdAt: new Date().toISOString(),
-      onboardingCompleted: false
-    });
-
-    // Send Welcome Email if requested
-    let emailStatus = 'skipped';
-    if (sendEmail) {
-      try {
-        await emailService.sendWelcomeEmail(email, name, password);
-        emailStatus = 'sent';
-        // Log email
-        await db.collection('email_logs').add({
-          to: email,
-          type: 'welcome',
-          sentAt: new Date().toISOString(),
-          status: 'delivered'
-        });
-      } catch (emailErr) {
-        console.error('Welcome email failed to send:', emailErr.message);
-        emailStatus = 'not_delivered';
-        await db.collection('email_logs').add({
-          to: email,
-          type: 'welcome',
-          sentAt: new Date().toISOString(),
-          status: 'not_delivered',
-          error: emailErr.message
-        });
-      }
-    }
-
-    res.status(201).json({ 
-      message: 'Student created successfully', 
-      uid: userRecord.uid,
-      emailStatus 
-    });
   } catch (error) {
     console.error('Create student error:', error);
     res.status(500).json({ error: 'Failed to create student', details: error.message });
@@ -390,29 +255,15 @@ app.delete('/api/admin/students/:id', verifyToken, adminOnly, async (req, res) =
   try {
     const { id } = req.params;
 
-    if (useLocalAdmin) {
-      try {
-        localStore.deleteStudent(id);
-        return res.status(200).json({ message: 'Student deleted successfully' });
-      } catch (err) {
-        if (err.code === 'not-found') {
-          return res.status(404).json({ error: err.message });
-        }
-        throw err;
-      }
-    }
-    
-    // Delete from Firestore
-    await db.collection('users').doc(id).delete();
-    
-    // Delete from Firebase Auth
     try {
-      await adminAuth.deleteUser(id);
-    } catch (authErr) {
-      console.error('Auth deletion error (user may not exist in Auth):', authErr.message);
+      localStore.deleteStudent(id);
+      return res.status(200).json({ message: 'Student deleted successfully' });
+    } catch (err) {
+      if (err.code === 'not-found') {
+        return res.status(404).json({ error: err.message });
+      }
+      throw err;
     }
-
-    res.status(200).json({ message: 'Student deleted successfully' });
   } catch (error) {
     console.error('Delete student error:', error);
     res.status(500).json({ error: 'Failed to delete student', details: error.message });
@@ -428,51 +279,18 @@ app.put('/api/admin/students/:id', verifyToken, adminOnly, async (req, res) => {
       return res.status(400).json({ error: 'Name and email are required' });
     }
 
-    if (useLocalAdmin) {
-      try {
-        const updated = localStore.updateStudent(id, { name, email, phone, workshop, status });
-        return res.status(200).json({ message: 'Student updated successfully', student: updated });
-      } catch (err) {
-        if (err.code === 'not-found') {
-          return res.status(404).json({ error: err.message });
-        }
-        if (err.code === 'already-exists' || err.code === 'invalid') {
-          return res.status(409).json({ error: err.message });
-        }
-        throw err;
-      }
-    }
-
-    const userRef = db.collection('users').doc(id);
-    const userDoc = await userRef.get();
-    if (!userDoc.exists || userDoc.data()?.role === 'admin') {
-      return res.status(404).json({ error: 'Student not found' });
-    }
-
-    const payload = {
-      name: name.trim(),
-      email: email.trim(),
-      phone: phone || '',
-      workshop: workshop || '',
-      status: status || 'active',
-      updatedAt: new Date().toISOString(),
-    };
-
-    await userRef.update(payload);
-
     try {
-      await adminAuth.updateUser(id, {
-        email: payload.email,
-        displayName: payload.name,
-      });
-    } catch (authErr) {
-      console.error('Auth update error:', authErr.message);
+      const updated = localStore.updateStudent(id, { name, email, phone, workshop, status });
+      return res.status(200).json({ message: 'Student updated successfully', student: updated });
+    } catch (err) {
+      if (err.code === 'not-found') {
+        return res.status(404).json({ error: err.message });
+      }
+      if (err.code === 'already-exists' || err.code === 'invalid') {
+        return res.status(409).json({ error: err.message });
+      }
+      throw err;
     }
-
-    res.status(200).json({
-      message: 'Student updated successfully',
-      student: { id, ...userDoc.data(), ...payload },
-    });
   } catch (error) {
     console.error('Update student error:', error);
     res.status(500).json({ error: 'Failed to update student', details: error.message });
@@ -481,67 +299,13 @@ app.put('/api/admin/students/:id', verifyToken, adminOnly, async (req, res) => {
 
 app.post('/api/admin/bulk-upload', verifyToken, adminOnly, async (req, res) => {
   try {
-    const { students } = req.body; // Array of {name, email, phone, workshop}
+    const { students } = req.body;
 
     if (!students || !Array.isArray(students)) {
       return res.status(400).json({ error: 'Students array is required' });
     }
 
-    if (useLocalAdmin) {
-      return res.status(200).json(localStore.bulkCreate(students));
-    }
-
-    const results = { successful: 0, failed: 0, errors: [] };
-
-    for (const student of students) {
-      try {
-        const password = Math.random().toString(36).slice(-8) + 'A1!'; // Generate random strong password
-        
-        const userRecord = await adminAuth.createUser({
-          email: student.email,
-          password: password,
-          displayName: student.name,
-        });
-
-        await db.collection('users').doc(userRecord.uid).set({
-          email: student.email,
-          name: student.name,
-          phone: student.phone || '',
-          workshop: student.workshop || 'Bulk Upload',
-          role: 'student',
-          status: 'active',
-          createdAt: new Date().toISOString(),
-          onboardingCompleted: false
-        });
-
-        // Send Welcome Email
-        try {
-          await emailService.sendWelcomeEmail(student.email, student.name, password);
-          await db.collection('email_logs').add({
-            to: student.email,
-            type: 'welcome',
-            sentAt: new Date().toISOString(),
-            status: 'delivered'
-          });
-        } catch (emailErr) {
-          console.error('Bulk upload email failed:', emailErr.message);
-          await db.collection('email_logs').add({
-            to: student.email,
-            type: 'welcome',
-            sentAt: new Date().toISOString(),
-            status: 'not_delivered',
-            error: emailErr.message
-          });
-        }
-
-        results.successful++;
-      } catch (err) {
-        results.failed++;
-        results.errors.push({ email: student.email, error: err.message });
-      }
-    }
-
-    res.status(200).json(results);
+    return res.status(200).json(localStore.bulkCreate(students));
   } catch (error) {
     console.error('Bulk upload error:', error);
     res.status(500).json({ error: 'Failed to process bulk upload', details: error.message });
@@ -550,16 +314,7 @@ app.post('/api/admin/bulk-upload', verifyToken, adminOnly, async (req, res) => {
 
 app.get('/api/admin/email-logs', verifyToken, adminOnly, async (req, res) => {
   try {
-    if (useLocalAdmin) {
-      return res.status(200).json(localStore.listEmailLogs());
-    }
-
-    const logsSnapshot = await db.collection('email_logs').orderBy('sentAt', 'desc').limit(50).get();
-    const logs = [];
-    logsSnapshot.forEach(doc => {
-      logs.push({ id: doc.id, ...doc.data() });
-    });
-    res.status(200).json(logs);
+    return res.status(200).json(localStore.listEmailLogs());
   } catch (error) {
     console.error('Fetch email logs error:', error);
     res.status(500).json({ error: 'Failed to fetch email logs' });
@@ -572,37 +327,15 @@ app.post('/api/student/onboarding', verifyToken, async (req, res) => {
     const uid = req.user.uid;
     const { name, onboardingData } = req.body || {};
 
-    if (useLocalAdmin || !db) {
-      try {
-        const profile = localStore.completeOnboarding(uid, { name, onboardingData });
-        return res.status(200).json({ message: 'Onboarding completed', user: profile });
-      } catch (err) {
-        if (err.code === 'not-found') {
-          return res.status(404).json({ error: err.message });
-        }
-        throw err;
+    try {
+      const profile = localStore.completeOnboarding(uid, { name, onboardingData });
+      return res.status(200).json({ message: 'Onboarding completed', user: profile });
+    } catch (err) {
+      if (err.code === 'not-found') {
+        return res.status(404).json({ error: err.message });
       }
+      throw err;
     }
-
-    const userRef = db.collection('users').doc(uid);
-    const userDoc = await userRef.get();
-    if (!userDoc.exists) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    const updateData = {
-      name: name || userDoc.data()?.name,
-      onboardingComplete: true,
-      onboardingCompleted: true,
-      onboardingData: onboardingData || {},
-      updatedAt: new Date().toISOString(),
-    };
-
-    await userRef.update(updateData);
-    res.status(200).json({
-      message: 'Onboarding completed',
-      user: { uid, ...userDoc.data(), ...updateData },
-    });
   } catch (error) {
     console.error('Onboarding error:', error);
     res.status(500).json({ error: 'Failed to save onboarding', details: error.message });
@@ -611,36 +344,10 @@ app.post('/api/student/onboarding', verifyToken, async (req, res) => {
 
 app.post('/api/student/activity', verifyToken, async (req, res) => {
   try {
-    const uid = req.user.uid;
-
-    if (useLocalAdmin || !db) {
-      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-      const currentDay = days[new Date().getDay()];
-      const dailyActivity = { [currentDay]: 1 };
-      return res.status(200).json({ dailyActivity });
-    }
-
-    const userRef = db.collection('users').doc(uid);
-    const userDoc = await userRef.get();
-
-    if (!userDoc.exists) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    const userData = userDoc.data();
-    let dailyActivity = userData.dailyActivity || {};
-    
-    // Get current day name (e.g. "Mon")
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const currentDay = days[new Date().getDay()];
-    
-    // If it's a new week, we could clear it, but for simplicity we just overwrite the day
-    // A better approach is to store full dates, but the UI expects days.
-    // We'll increment the current day.
-    dailyActivity[currentDay] = (dailyActivity[currentDay] || 0) + 1; // +1 minute
-
-    await userRef.update({ dailyActivity });
-    res.status(200).json({ success: true, dailyActivity });
+    const dailyActivity = { [currentDay]: 1 };
+    return res.status(200).json({ dailyActivity });
   } catch (error) {
     console.error('Activity Tracking Error:', error);
     res.status(500).json({ error: 'Failed to update activity' });
