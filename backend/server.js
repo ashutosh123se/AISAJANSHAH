@@ -147,14 +147,34 @@ app.post('/api/memory-story', verifyToken, async (req, res) => {
       return res.status(400).json({ error: 'Text is required' });
     }
 
-    const systemPrompt = `You are a master memory coach and storyteller. Your job is to read any educational text and transform it into an ILLOGICAL, ABSURD, VIVID, and FUNNY memory story that makes the concepts permanently stick in a student's mind.`;
+    const systemPrompt = `You are Sajan Shah, master memory coach and Memory Man of India. Your job is to transform any educational paragraph into a DETAILED, 15-LINE ILLOGICAL, ABSURD, VIVID, and FUNNY memory story that makes every concept stick permanently in a student's mind.
+
+RULES FOR THE STORY:
+1. Extract ALL key concepts, facts, names, dates, and ideas from the text.
+2. Create an illogical, absurd 12 to 15-sentence story where every absurd character/object/event maps to a real concept from the text.
+3. Make it extremely visual, wild, and memorable (flying elephants, dancing robots, talking vegetables, levitating trees).
+4. Write the story in an engaging mix of English and Hinglish.
+
+OUTPUT FORMAT (respond ONLY with valid JSON, no markdown formatting):
+{
+  "title": "A catchy, fun title for the memory story",
+  "story": "The full vivid, illogical, 15-line memory story (detailed, 12-15 sentences, rich with wild imagery)",
+  "conceptMap": [
+    { "storyElement": "The flying elephant", "realConcept": "First key concept from text", "emoji": "🐘" },
+    { "storyElement": "The dancing robot", "realConcept": "Second key concept from text", "emoji": "🤖" },
+    { "storyElement": "The glowing dragon", "realConcept": "Third key concept from text", "emoji": "🐉" },
+    { "storyElement": "The floating clock", "realConcept": "Fourth key concept from text", "emoji": "⏰" }
+  ],
+  "memoryHook": "One powerful line the student should repeat to lock this in memory",
+  "quickRevision": "A simple 3-line revision of the original topic"
+}`;
 
     try {
       const completion = await openAIService.openai.chat.completions.create({
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Transform this text into a memory story:\n\n${text}` }
+          { role: 'user', content: `Transform this educational text into a 15-line illogical memory story:\n\n${text}` }
         ],
         response_format: { type: 'json_object' }
       });
@@ -163,15 +183,41 @@ app.post('/api/memory-story', verifyToken, async (req, res) => {
       return res.status(200).json(result);
     } catch (openAiErr) {
       console.error('Memory Story OpenAI Error:', openAiErr.message);
+
+      const words = text.trim().split(/\s+/);
+      const keywords = words.filter(w => w.length > 3).slice(0, 5);
+      const k1 = keywords[0] || 'Concept Alpha';
+      const k2 = keywords[1] || 'Concept Beta';
+      const k3 = keywords[2] || 'Concept Gamma';
+      const k4 = keywords[3] || 'Concept Delta';
+
+      const dynamicStory = `1. Ek din aakaash me ek ajeeb sa chamakne wala rocket flying elephant ke roop me prakat hua.
+2. Ye elephant ${k1} ko apne sarr par pehenkar Bollywood song par dance kar raha tha!
+3. Achanak zameen se ek giant glowing robot nikla jo ${k2} ko apne haath me lekar juggling karne laga.
+4. Robot ne zor se bola: "Agar tum ${k3} ko samajhna chahte ho, to mere saath bhago!"
+5. Tabhi aasman se aam ke ped girne lage aur ${k4} un aam ke pedo par baithkar tabla bajane laga!
+6. Elephant ne robot ko ek magical ice-cream di jisse robot uddne laga.
+7. Un dono ke uddte hi poora shehar ek giant chocolate memory palace me badal gaya.
+8. Har chocolate box me ${k1} aur ${k2} ki photos chamak rahi thi.
+9. Ek bolta hua tota aaya aur usne bola: "${k3} hi tumhari asli shakti hai!"
+10. Tota ne apne pankh phailaye aur aasmaan me magical fireworks hone lage.
+11. Sabhi bacche us fireworks me ${k4} ke magic formulas dekhne lage.
+12. Phir ek magical clock chalne lagi jisme waqt piche jaane laga.
+13. Is illogical story ne tumhare dimaag ke saare neurons ko ignite kar diya hai.
+14. Ab jab bhi tum ${k1} ya ${k2} sochoge, ye flying elephant aur dancing robot tumhe turant yaad aayega.
+15. Ye story tumhare brain me permanent memory ke roop me lock ho chuki hai!`;
+
       return res.status(200).json({
-        title: "The Flying Elephant & Dancing Robot",
-        story: `Ek baar ek flying elephant ne aakaash me dance karna shuru kiya. Uske saath ek robot bhi bhagne laga! Is illogical story se aapke saare key concepts hamesha ke liye dimaag me lock ho jaayenge!`,
+        title: `The Illogical Memory Story of ${k1}`,
+        story: dynamicStory,
         conceptMap: [
-          { storyElement: "Flying Elephant", realConcept: text.slice(0, 30) || "Main Concept", emoji: "🐘" },
-          { storyElement: "Dancing Robot", realConcept: "Key Principle", emoji: "🤖" }
+          { storyElement: "Flying Elephant with Magic Hat", realConcept: k1, emoji: "🐘" },
+          { storyElement: "Juggling Glowing Robot", realConcept: k2, emoji: "🤖" },
+          { storyElement: "Tabla Playing Mango Tree", realConcept: k3, emoji: "🥭" },
+          { storyElement: "Magical Fireworks & Clock", realConcept: k4, emoji: "⏰" }
         ],
-        memoryHook: "Jab bhi bhoolne lago, Flying Elephant ko yaad karo!",
-        quickRevision: "Revise main concepts daily for 5 minutes before sleep."
+        memoryHook: `Jab bhi ${k1} ya ${k2} yaad karna ho, Flying Elephant & Juggling Robot ko yaad karo!`,
+        quickRevision: `Main concepts extracted: 1. ${k1} | 2. ${k2} | 3. ${k3} | 4. ${k4}. Revise daily for 2 minutes!`
       });
     }
   } catch (error) {
