@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Gamepad2, Search, Trophy, Medal, Star } from 'lucide-react';
-import { auth } from '../../firebase';
+import { apiFetch } from '../../utils/api';
 import Input from '../../components/ui/Input';
 
 const BrainGymScores = () => {
@@ -11,15 +11,7 @@ const BrainGymScores = () => {
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        const user = auth.currentUser;
-        if (!user) return;
-        const token = await user.getIdToken();
-        
-        const response = await fetch('http://localhost:5000/api/admin/students', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        const response = await apiFetch('/api/admin/students');
         
         if (response.ok) {
           const data = await response.json();

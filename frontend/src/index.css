@@ -659,6 +659,18 @@
   box-shadow: 0 0 20px rgba(229, 90, 40, 0.3);
 }
 
+/* Login entrance animations (no JS dependency) */
+.auth-animate-in {
+  animation: authFadeIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.auth-animate-in--delay-1 { animation-delay: 0.1s; }
+.auth-animate-in--delay-2 { animation-delay: 0.2s; }
+
+@keyframes authFadeIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .auth-form-panel {
   @apply flex items-center justify-center w-full relative z-10;
   flex: 0.85;

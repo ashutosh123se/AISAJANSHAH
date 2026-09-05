@@ -1,44 +1,43 @@
 import React, { useState } from 'react';
 import { Compass, Briefcase, GraduationCap, TrendingUp, Search, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { auth } from '../../firebase';
+import { apiFetch } from '../../utils/api';
+import { isDevAuthEnabled } from '../../devAuth';
+import { generateDevCareerAnalysis } from '../../utils/devCareer';
 
 const CareerAI = () => {
   const [query, setQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
-  const { userProfile } = useAuth();
+  const [isDemo, setIsDemo] = useState(false);
+  const { isDevAuth } = useAuth();
 
   const handleSearch = async () => {
     if (!query.trim()) return;
     setIsSearching(true);
     setError(null);
     setResult(null);
-    
-    try {
-      const user = auth.currentUser;
-      if (!user) throw new Error("Not authenticated");
-      const token = await user.getIdToken();
+    setIsDemo(false);
 
-      const response = await fetch('http://localhost:5000/api/career/analyze', {
+    try {
+      const response = await apiFetch('/api/career/analyze', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ query: query.trim() })
+        body: JSON.stringify({ query: query.trim() }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to analyze career path');
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to analyze career path');
       }
 
       const data = await response.json();
       setResult(data);
     } catch (err) {
-      console.error("Career Analysis Error:", err);
-      setError("Oops! Sajan's AI had a brief hiccup. Please try again.");
+      console.error('Career Analysis Error:', err);
+      // Useful fallback instead of a dead-end error
+      setResult(generateDevCareerAnalysis(query));
+      setIsDemo(true);
     } finally {
       setIsSearching(false);
     }
@@ -54,29 +53,30 @@ const CareerAI = () => {
           Career AI
         </h2>
         <p className="text-[15px] font-sans mt-3 text-[var(--color-text-secondary)] max-w-2xl leading-relaxed">
-          Discover career paths tailored to your unique neural blueprint. Sajan's AI will calculate the optimal trajectory.
+          Discover career paths tailored to your unique neural blueprint. Sajan&apos;s AI will calculate the optimal trajectory.
         </p>
       </div>
 
       <div className="p-8 mb-10 bg-white border border-[var(--color-border)]">
-        
         <h3 className="text-[18px] font-serif font-bold text-[var(--color-primary)] mb-6">
           Input your desired parameters or dream trajectories
         </h3>
-        
+
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1 group/input">
             <Search className="w-5 h-5 absolute left-5 top-1/2 -translate-y-1/2 text-[var(--color-text-hint)] group-focus-within/input:text-[var(--color-primary)] transition-colors" />
-            <input 
+            <input
               type="text"
               placeholder="e.g., I want to be a data scientist... or I like designing interfaces"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSearch();
+              }}
               className="w-full h-14 pl-14 pr-4 text-[15px] font-sans text-[var(--color-primary)] bg-[var(--color-bg)] border border-[var(--color-border)] transition-all outline-none focus:border-[var(--color-primary)]"
             />
           </div>
-          <button 
+          <button
             onClick={handleSearch}
             disabled={!query.trim() || isSearching}
             className="btn-elegant h-14 px-8 disabled:opacity-50 flex items-center justify-center gap-2"
@@ -94,7 +94,12 @@ const CareerAI = () => {
 
       {result && (
         <div className="p-8 lg:p-10 animate-in fade-in slide-in-from-bottom-4 bg-white border border-[var(--color-border)]">
-          
+          {isDemo && (
+            <div className="mb-6 p-4 bg-amber-50 border border-amber-200 text-sm font-sans text-amber-800 rounded-lg">
+              Demo career plan generated locally. Add <code className="bg-amber-100 px-1 rounded">OPENAI_API_KEY</code> to backend/.env for live AI analysis.
+            </div>
+          )}
+
           <div className="flex items-start justify-between mb-8">
             <div>
               <div className="flex items-center gap-3 mb-3">
@@ -147,10 +152,10 @@ const CareerAI = () => {
                   </span>
                 ))}
               </div>
-              
+
               <div className="mt-10 p-8 bg-[var(--color-bg)] border border-[var(--color-border)]">
                 <p className="text-[16px] font-sans italic font-medium text-[var(--color-text-secondary)] leading-relaxed">
-                  "Your career is a marathon, not a sprint. Focus on building these skills daily, and the results will follow."
+                  &quot;Your career is a marathon, not a sprint. Focus on building these skills daily, and the results will follow.&quot;
                 </p>
                 <div className="flex items-center gap-3 mt-6">
                   <div className="w-10 h-10 border border-[var(--color-border)] bg-white flex items-center justify-center">

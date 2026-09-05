@@ -6,7 +6,18 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'noreply@ai.sajanshah.com';
 
+const isSendGridConfigured = () => {
+  const key = process.env.SENDGRID_API_KEY || '';
+  return key.startsWith('SG.');
+};
+
 const sendWelcomeEmail = async (toEmail, name, tempPassword) => {
+  if (!isSendGridConfigured()) {
+    const err = new Error('SendGrid is not configured — email not delivered');
+    err.code = 'not_delivered';
+    throw err;
+  }
+
   const msg = {
     to: toEmail,
     from: FROM_EMAIL,

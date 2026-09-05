@@ -2,15 +2,24 @@ const OpenAI = require('openai');
 const dotenv = require('dotenv');
 dotenv.config();
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+let openaiClient = null;
+
+const getOpenAI = () => {
+  if (!process.env.OPENAI_API_KEY?.trim()) {
+    throw new Error('OPENAI_API_KEY is not configured');
+  }
+  if (!openaiClient) {
+    openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+  return openaiClient;
+};
 
 const generateChatResponse = async (messages, systemPrompt) => {
   try {
+    const openai = getOpenAI();
     const formattedMessages = [
       { role: 'system', content: systemPrompt },
-      ...messages
+      ...messages,
     ];
 
     const completion = await openai.chat.completions.create({
@@ -27,13 +36,14 @@ const generateChatResponse = async (messages, systemPrompt) => {
 
 const generateAnalysis = async (text, systemPrompt) => {
   try {
+    const openai = getOpenAI();
     const response = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: `Analyze the following text according to the system prompt:\n\n${text}` }
+        { role: 'user', content: `Analyze the following text according to the system prompt:\n\n${text}` },
       ],
-      response_format: { type: 'json_object' } // Expecting JSON response based on our prompt
+      response_format: { type: 'json_object' },
     });
 
     return JSON.parse(response.choices[0].message.content);
@@ -45,9 +55,10 @@ const generateAnalysis = async (text, systemPrompt) => {
 
 const generateChatStream = async (messages, systemPrompt) => {
   try {
+    const openai = getOpenAI();
     const formattedMessages = [
       { role: 'system', content: systemPrompt },
-      ...messages
+      ...messages,
     ];
 
     return await openai.chat.completions.create({
@@ -62,8 +73,10 @@ const generateChatStream = async (messages, systemPrompt) => {
 };
 
 module.exports = {
-  openai,
+  get openai() {
+    return getOpenAI();
+  },
   generateChatResponse,
   generateChatStream,
-  generateAnalysis
+  generateAnalysis,
 };

@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { Sparkles, Brain, Target, Compass, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
-import { DEV_CREDENTIALS_HINT } from '../devAuth';
 
 const FEATURES = [
   {
@@ -26,15 +24,6 @@ const FEATURES = [
   },
 ];
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 18 },
-  visible: (i = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.55, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] },
-  }),
-};
-
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -43,14 +32,15 @@ const Login = () => {
   const [localError, setLocalError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { login, googleLogin, userProfile, isAdmin, error: authError, isFirebaseConfigured, isDevAuth } = useAuth();
+  const { login, googleLogin, userProfile, isAdmin, loading, error: authError, isFirebaseConfigured } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (loading) return;
     if (userProfile) {
-      navigate(isAdmin ? '/admin' : '/student');
+      navigate(isAdmin ? '/admin' : '/student', { replace: true });
     }
-  }, [userProfile, isAdmin, navigate]);
+  }, [userProfile, isAdmin, navigate, loading]);
 
   const handleEmailLogin = async (e) => {
     e.preventDefault();
@@ -100,13 +90,7 @@ const Login = () => {
         </div>
 
         {/* Logo showcase */}
-        <motion.div
-          className="auth-brand-header"
-          initial="hidden"
-          animate="visible"
-          variants={fadeUp}
-          custom={0}
-        >
+        <div className="auth-brand-header auth-animate-in">
           <div className="auth-logo-showcase">
             <div className="auth-logo-orbit-ring" aria-hidden="true" />
             <div className="auth-logo-diamond">
@@ -136,15 +120,9 @@ const Login = () => {
             </div>
             <p className="auth-logo-tagline">Your Personal Mentor, Always On</p>
           </div>
-        </motion.div>
+        </div>
 
-        <motion.div
-          className="auth-brand-body"
-          initial="hidden"
-          animate="visible"
-          variants={fadeUp}
-          custom={1}
-        >
+        <div className="auth-brand-body auth-animate-in auth-animate-in--delay-1">
           <div className="auth-quote-block">
             <p className="auth-quote-text">
               &ldquo;Your mind is your greatest asset — let me help you unlock it.&rdquo;
@@ -158,15 +136,8 @@ const Login = () => {
           </h2>
 
           <div className="feature-grid">
-            {FEATURES.map((f, i) => (
-              <motion.div
-                key={f.title}
-                className="feature-card"
-                initial="hidden"
-                animate="visible"
-                variants={fadeUp}
-                custom={2 + i * 0.15}
-              >
+            {FEATURES.map((f) => (
+              <div key={f.title} className="feature-card">
                 <div className="feature-card-top">
                   <span className="feature-num">{f.num}</span>
                   <div className="feature-icon">
@@ -175,18 +146,12 @@ const Login = () => {
                 </div>
                 <h4>{f.title}</h4>
                 <p>{f.desc}</p>
-              </motion.div>
+              </div>
             ))}
           </div>
-        </motion.div>
+        </div>
 
-        <motion.div
-          className="auth-stats-bar"
-          initial="hidden"
-          animate="visible"
-          variants={fadeUp}
-          custom={3}
-        >
+        <div className="auth-stats-bar auth-animate-in auth-animate-in--delay-2">
           <div className="auth-stat-item">
             <span className="auth-stat-value auth-stat-value--accent">15M+</span>
             <span className="auth-stat-label">Lives Transformed</span>
@@ -201,7 +166,7 @@ const Login = () => {
             <span className="auth-stat-value auth-stat-value--gold">90</span>
             <span className="auth-stat-label">Day Framework</span>
           </div>
-        </motion.div>
+        </div>
       </div>
 
       {/* ── Login form (right) ── */}
@@ -225,26 +190,7 @@ const Login = () => {
             </p>
           </div>
 
-          {isDevAuth && (
-            <div className="mb-6 p-4 rounded-xl text-sm font-sans bg-emerald-50 border border-emerald-200 text-emerald-900">
-              <p className="font-semibold mb-2">Dev mode — use these credentials to sign in:</p>
-              <div className="space-y-2">
-                {DEV_CREDENTIALS_HINT.map((c) => (
-                  <button
-                    key={c.label}
-                    type="button"
-                    onClick={() => { setEmail(c.email); setPassword(c.password); setLocalError(''); }}
-                    className="w-full text-left px-3 py-2 rounded-lg bg-white/80 border border-emerald-200 hover:border-emerald-400 transition-colors"
-                  >
-                    <span className="font-bold text-emerald-800">{c.label}:</span>{' '}
-                    <span className="text-emerald-700">{c.email}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {!isFirebaseConfigured && !isDevAuth && (
+          {!isFirebaseConfigured && (
             <div className="mb-6 p-4 rounded-xl text-sm font-sans bg-amber-50 border border-amber-200 text-amber-800">
               Firebase credentials are missing. Add your keys to <code className="text-xs bg-amber-100 px-1 rounded">frontend/.env</code> and restart the dev server.
             </div>

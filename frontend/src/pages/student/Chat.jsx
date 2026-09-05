@@ -5,10 +5,12 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import ChatMessage from '../../components/chat/ChatMessage';
 import TypingIndicator from '../../components/chat/TypingIndicator';
 import QuickChips from '../../components/chat/QuickChips';
-import { auth } from '../../firebase';
+import { apiFetch } from '../../utils/api';
+import { isDevAuthEnabled } from '../../devAuth';
+import { generateDevChatReply } from '../../utils/devChat';
 
 const Chat = () => {
-  const { userProfile } = useAuth();
+  const { userProfile, isDevAuth } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
@@ -90,93 +92,105 @@ const Chat = () => {
     
     setIsTyping(true);
 
-    try {
-      const user = auth.currentUser;
-      if (!user) throw new Error("Not authenticated");
-      const token = await user.getIdToken();
+    const pushAssistant = (content) => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `${Date.now()}-assistant`,
+          role: 'assistant',
+          content,
+          timestamp: new Date().toISOString(),
+        },
+      ]);
+      setIsTyping(false);
+    };
 
-      const apiMessages = [...messages, newUserMessage].map(m => {
+    // Prefer real OpenAI via backend; dig local reply is used only if the API fails
+    try {
+      const apiMessages = [...messages, newUserMessage].map((m) => {
         if (m.role === 'user' && m.imageUrl) {
           return {
             role: m.role,
             content: [
-              { type: 'text', text: m.content || "Here is an image." },
-              { type: 'image_url', image_url: { url: m.imageUrl } }
-            ]
+              { type: 'text', text: m.content || 'Here is an image.' },
+              { type: 'image_url', image_url: { url: m.imageUrl } },
+            ],
           };
         }
         return {
           role: m.role,
-          content: m.content
+          content: m.content,
         };
       });
 
-      const response = await fetch('http://localhost:5000/api/chat', {
+      const response = await apiFetch('/api/chat', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify({
           messages: apiMessages,
           userProfile,
-          isGoalCheckin: options.isGoalCheckin
-        })
+          isGoalCheckin: options.isGoalCheckin,
+        }),
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to get response');
+        throw new Error(errorData.error || errorData.details || 'Failed to get response');
       }
 
-      // Add a placeholder message for the assistant
-      const assistantMessageId = Date.now().toString();
-      setMessages(prev => [...prev, {
-        id: assistantMessageId,
-        role: 'assistant',
-        content: '',
-        timestamp: new Date().toISOString()
-      }]);
-      setIsTyping(false); // Turn off the spinner since we are streaming now
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('text/event-stream') || !response.body) {
+        throw new Error('Unexpected chat response');
+      }
+
+      const assistantMessageId = `${Date.now()}-stream`;
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: assistantMessageId,
+          role: 'assistant',
+          content: '',
+          timestamp: new Date().toISOString(),
+        },
+      ]);
+      setIsTyping(false);
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder('utf-8');
       let done = false;
+      let buffer = '';
 
       while (!done) {
         const { value, done: readerDone } = await reader.read();
         done = readerDone;
         if (value) {
-          const chunkString = decoder.decode(value, { stream: true });
-          const lines = chunkString.split('\n');
-          
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
           for (const line of lines) {
             if (line.startsWith('data: ') && line !== 'data: [DONE]') {
               try {
                 const data = JSON.parse(line.replace('data: ', ''));
                 if (data.content) {
-                  setMessages(prev => prev.map(msg => 
-                    msg.id === assistantMessageId 
-                      ? { ...msg, content: msg.content + data.content }
-                      : msg
-                  ));
+                  setMessages((prev) =>
+                    prev.map((msg) =>
+                      msg.id === assistantMessageId
+                        ? { ...msg, content: msg.content + data.content }
+                        : msg
+                    )
+                  );
                 }
               } catch (e) {
-                console.error("Error parsing stream chunk", e, line);
+                console.error('Error parsing stream chunk', e, line);
               }
             }
           }
         }
       }
     } catch (error) {
-      console.error("Chat Error:", error);
-      setIsTyping(false);
-      setMessages(prev => [...prev, {
-        id: Date.now().toString(),
-        role: 'assistant',
-        content: "Oops! Sajan's AI is taking a quick break. Please try again in a moment.",
-        timestamp: new Date().toISOString()
-      }]);
+      console.error('Chat Error:', error);
+      // Always fall back to a useful local reply rather than a dead end
+      pushAssistant(generateDevChatReply(messageText));
     }
   };
 
@@ -263,7 +277,7 @@ const Chat = () => {
 
       {/* Input Area */}
       <div className="bg-white border-t border-[var(--color-border)] z-30 shrink-0 relative">
-        <QuickChips onChipClick={(chip) => setInputValue(chip)} />
+        <QuickChips onChipClick={(chip) => sendMessageToApi(chip)} />
         
         <div className="p-3 lg:p-4 pb-[max(12px,env(safe-area-inset-bottom))] flex flex-col gap-2">
           {selectedImage && (

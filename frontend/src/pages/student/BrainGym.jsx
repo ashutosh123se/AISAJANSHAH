@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Brain, Zap, Clock, Puzzle, Play, RefreshCw, Trophy, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { auth } from '../../firebase';
+import { apiFetch } from '../../utils/api';
+import { isDevAuthEnabled } from '../../devAuth';
 
 const BrainGym = () => {
-  const { userProfile, setUserProfile } = useAuth();
+  const { userProfile, setUserProfile, isDevAuth } = useAuth();
   
   // Game States: 'menu', 'countdown', 'memorize', 'recall', 'success', 'gameover'
   const [gameState, setGameState] = useState('menu');
@@ -125,22 +126,24 @@ const BrainGym = () => {
   const saveScore = async (xp) => {
     setIsSaving(true);
     try {
-      const user = auth.currentUser;
-      if (!user) return;
-      const token = await user.getIdToken();
+      // Dig mode: update XP locally
+      if (isDevAuth || isDevAuthEnabled) {
+        setUserProfile((prev) => {
+          const nextXp = (prev?.xp || 0) + xp;
+          const nextLevel = Math.floor(nextXp / 100) + 1;
+          return { ...prev, xp: nextXp, level: nextLevel };
+        });
+        return;
+      }
 
-      const response = await fetch('http://localhost:5000/api/braingym/score', {
+      const response = await apiFetch('/api/braingym/score', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ xpGained: xp })
+        body: JSON.stringify({ xpGained: xp }),
       });
 
       if (response.ok) {
         const data = await response.json();
-        setUserProfile(prev => ({ ...prev, xp: data.xp, level: data.level }));
+        setUserProfile((prev) => ({ ...prev, xp: data.xp, level: data.level }));
       }
     } catch (error) {
       console.error('Error saving score:', error);

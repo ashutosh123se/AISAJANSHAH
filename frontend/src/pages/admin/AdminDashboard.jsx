@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Users, Activity, Mail, UserPlus, TrendingUp, TrendingDown } from 'lucide-react';
 import { LineChart, Line, PieChart, Pie, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { useNavigate } from 'react-router-dom';
-import { auth } from '../../firebase'; // Needed for token
+import { apiFetch } from '../../utils/api';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -25,15 +25,7 @@ const AdminDashboard = () => {
     const fetchStats = async () => {
       try {
         setLoading(true);
-        const user = auth.currentUser;
-        if (!user) return;
-        const token = await user.getIdToken();
-        
-        const response = await fetch('http://localhost:5000/api/admin/stats', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        const response = await apiFetch('/api/admin/stats');
         
         if (response.ok) {
           const data = await response.json();

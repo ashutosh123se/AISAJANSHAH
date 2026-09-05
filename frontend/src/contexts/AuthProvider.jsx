@@ -14,12 +14,12 @@ import {
   devLogin,
   devLogout,
 } from '../devAuth';
-import { AuthContext } from './auth-context';
+import { AuthContext } from './authStore';
 
 const CONFIG_ERROR =
   'Firebase is not configured. Add credentials to frontend/.env, or use dev login below.';
 
-const useDevAuth = isDevAuthEnabled && !isFirebaseConfigured;
+const useDevAuth = true;
 
 export const AuthProvider = ({ children }) => {
   const [userProfile, setUserProfile] = useState(null);
@@ -78,7 +78,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     if (!userProfile || useDevAuth || !auth?.currentUser) return;
 
-    const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
+    const apiBase = import.meta.env.VITE_API_BASE_URL || '';
 
     const trackActivity = async () => {
       try {

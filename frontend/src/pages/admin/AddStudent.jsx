@@ -3,7 +3,7 @@ import { UserPlus, Mail, Phone, Lock, Save } from 'lucide-react';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
 import Toast, { ToastContainer } from '../../components/ui/Toast';
-import { auth } from '../../firebase';
+import { apiFetch } from '../../utils/api';
 
 const AddStudent = () => {
   const [formData, setFormData] = useState({
@@ -40,16 +40,8 @@ const AddStudent = () => {
     setIsSubmitting(true);
     
     try {
-      const user = auth.currentUser;
-      if (!user) throw new Error("Not authenticated");
-      const token = await user.getIdToken();
-      
-      const response = await fetch('http://localhost:5000/api/admin/students', {
+      const response = await apiFetch('/api/admin/students', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify(formData)
       });
       
@@ -58,7 +50,15 @@ const AddStudent = () => {
         throw new Error(data.details || data.error || 'Failed to add student');
       }
       
-      addToast('Student added successfully! Welcome email sent.', 'success');
+      const emailNote =
+        data.emailStatus === 'sent'
+          ? ' Welcome email delivered.'
+          : data.emailStatus === 'not_delivered' || data.emailStatus === 'failed' || data.emailStatus === 'simulated'
+            ? ` Welcome email not delivered — share this password with the student: ${formData.password}`
+            : data.emailStatus === 'skipped'
+              ? ` Share this password with the student: ${formData.password}`
+              : ` Password: ${formData.password}`;
+      addToast(`Student added successfully!${emailNote}`, 'success');
       setFormData({
         name: '',
         email: '',

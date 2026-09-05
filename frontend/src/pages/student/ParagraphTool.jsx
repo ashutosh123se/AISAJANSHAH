@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
-import { Copy, BookOpen, CheckCircle2, Sparkles, Brain, Zap, RefreshCw, FileText, Bot, ArrowRight, Wand2, Quote } from 'lucide-react';
+import { Copy, BookOpen, CheckCircle2, Sparkles, Brain, Zap, RefreshCw, ArrowRight, Wand2, Quote } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import Button from '../../components/ui/Button';
-import { auth } from '../../firebase';
+import { apiFetch } from '../../utils/api';
+import { isDevAuthEnabled } from '../../devAuth';
+import { generateDevMemoryStory } from '../../utils/devMemoryStory';
 
 const ParagraphTool = () => {
   const [text, setText] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [devDemo, setDevDemo] = useState(false);
+
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
@@ -17,19 +20,12 @@ const ParagraphTool = () => {
     setIsAnalyzing(true);
     setResult(null);
     setError(null);
+    setDevDemo(false);
 
     try {
-      const user = auth.currentUser;
-      if (!user) throw new Error('Not authenticated');
-      const token = await user.getIdToken();
-
-      const response = await fetch('http://localhost:5000/api/memory-story', {
+      const response = await apiFetch('/api/memory-story', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ text: text.trim() })
+        body: JSON.stringify({ text: text.trim() }),
       });
 
       const data = await response.json();
@@ -37,7 +33,18 @@ const ParagraphTool = () => {
       setResult(data);
     } catch (err) {
       console.error('Memory story error:', err);
-      setError('Arre yaar! Kuch gadbad ho gayi. Please try again.');
+
+      if (isDevAuthEnabled) {
+        setResult(generateDevMemoryStory(text));
+        setDevDemo(true);
+        setError(null);
+      } else {
+        setError(
+          err.message === 'Not authenticated. Please log in again.'
+            ? 'Session expired. Please log out and sign in again.'
+            : 'Could not reach the AI server. Make sure the backend is running with OPENAI_API_KEY set.'
+        );
+      }
     } finally {
       setIsAnalyzing(false);
     }
@@ -174,6 +181,11 @@ const ParagraphTool = () => {
       {/* Result */}
       {result && !isAnalyzing && (
         <div className="mt-8 space-y-6">
+          {devDemo && (
+            <div className="p-4 bg-amber-50 border border-amber-200 text-sm font-sans text-amber-800 rounded-lg">
+              Demo story generated locally. Start the backend with <code className="bg-amber-100 px-1 rounded">OPENAI_API_KEY</code> for real AI-powered stories.
+            </div>
+          )}
 
           {/* Story Card — Main Hero */}
           <div className="bg-white border border-[var(--color-border)] p-8 lg:p-12">

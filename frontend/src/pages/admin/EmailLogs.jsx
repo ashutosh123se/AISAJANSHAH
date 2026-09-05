@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { Search, Filter, Mail, CheckCircle2, XCircle } from 'lucide-react';
 import Input from '../../components/ui/Input';
 import Button from '../../components/ui/Button';
-
-import { auth } from '../../firebase';
+import { apiFetch } from '../../utils/api';
 
 const EmailLogs = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -13,15 +12,7 @@ const EmailLogs = () => {
   React.useEffect(() => {
     const fetchLogs = async () => {
       try {
-        const user = auth.currentUser;
-        if (!user) return;
-        const token = await user.getIdToken();
-
-        const response = await fetch('http://localhost:5000/api/admin/email-logs', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        const response = await apiFetch('/api/admin/email-logs');
 
         if (response.ok) {
           const data = await response.json();
@@ -99,12 +90,24 @@ const EmailLogs = () => {
                       </span>
                     </td>
                     <td className="px-8 py-6">
-                      <div className={`flex items-center gap-2 text-[12px] font-sans font-bold px-3 py-1.5 rounded-full inline-flex ${
-                        log.status === 'success' || log.status === 'Delivered' ? 'text-emerald-700 bg-emerald-50 border border-emerald-200' : 'text-red-700 bg-red-50 border border-red-200'
-                      }`}>
-                        {(log.status === 'success' || log.status === 'Delivered') ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
-                        {log.status === 'success' ? 'Delivered' : log.status}
-                      </div>
+                      {(() => {
+                        const delivered =
+                          log.status === 'success' ||
+                          log.status === 'Delivered' ||
+                          log.status === 'delivered' ||
+                          log.status === 'sent';
+                        const label = delivered ? 'Delivered' : 'Not Delivered';
+                        return (
+                          <div className={`flex items-center gap-2 text-[12px] font-sans font-bold px-3 py-1.5 rounded-full inline-flex ${
+                            delivered
+                              ? 'text-emerald-700 bg-emerald-50 border border-emerald-200'
+                              : 'text-red-700 bg-red-50 border border-red-200'
+                          }`}>
+                            {delivered ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                            {label}
+                          </div>
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))

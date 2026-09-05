@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db, isFirebaseConfigured } from '../firebase';
+import { isDevAuthEnabled } from '../devAuth';
+import { apiFetch } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
 import { ChevronLeft, Check } from 'lucide-react';
 import Button from '../components/ui/Button';
@@ -23,6 +25,7 @@ const Onboarding = () => {
   const [goal90Day, setGoal90Day] = useState('');
   const [language, setLanguage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const nextStep = () => setStep(prev => Math.min(prev + 1, totalSteps));
   const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
@@ -32,6 +35,7 @@ const Onboarding = () => {
     
     try {
       setIsSubmitting(true);
+      setSubmitError('');
       const allChallenges = [...challenges];
       if (customChallenge.trim()) {
         allChallenges.push(customChallenge.trim());
@@ -40,6 +44,7 @@ const Onboarding = () => {
       const updateData = {
         name,
         onboardingComplete: true,
+        onboardingCompleted: true,
         onboardingData: {
           ageGroup,
           situation,
@@ -48,17 +53,37 @@ const Onboarding = () => {
           language
         }
       };
-      
-      const userRef = doc(db, 'users', userProfile.uid);
-      await updateDoc(userRef, updateData);
-      
-      // Update local context profile
-      setUserProfile({ ...userProfile, ...updateData });
+
+      const useLocal = isDevAuthEnabled && !isFirebaseConfigured;
+
+      if (useLocal) {
+        const response = await apiFetch('/api/student/onboarding', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: updateData.name,
+            onboardingData: updateData.onboardingData,
+          }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(data.error || data.details || 'Failed to save onboarding');
+        }
+        const nextProfile = { ...userProfile, ...updateData, ...(data.user || {}) };
+        setUserProfile(nextProfile);
+        localStorage.setItem('aisajan_local_session', JSON.stringify(nextProfile));
+      } else {
+        if (!db) {
+          throw new Error('Firebase is not configured. Cannot save onboarding.');
+        }
+        const userRef = doc(db, 'users', userProfile.uid);
+        await updateDoc(userRef, updateData);
+        setUserProfile({ ...userProfile, ...updateData });
+      }
       
       navigate('/student');
     } catch (err) {
       console.error("Error saving onboarding data:", err);
-      // Handle error gracefully
+      setSubmitError(err.message || 'Could not finish onboarding. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -300,6 +325,11 @@ const Onboarding = () => {
         >
           {isSubmitting ? 'Initializing Matrix...' : 'Start My Journey'}
         </button>
+        {submitError && (
+          <p className="mt-4 text-sm font-sans text-red-600 text-center bg-red-50 border border-red-100 rounded-lg px-4 py-3">
+            {submitError}
+          </p>
+        )}
       </div>
     );
   };

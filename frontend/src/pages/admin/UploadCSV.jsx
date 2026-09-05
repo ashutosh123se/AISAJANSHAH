@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Upload as UploadIcon, FileSpreadsheet, CheckCircle2, AlertCircle, Trash2 } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import Papa from 'papaparse';
-import { auth } from '../../firebase';
+import { apiFetch } from '../../utils/api';
 
 const UploadCSV = () => {
   const [file, setFile] = useState(null);
@@ -55,16 +55,8 @@ const UploadCSV = () => {
       skipEmptyLines: true,
       complete: async (results) => {
         try {
-          const user = auth.currentUser;
-          if (!user) throw new Error("Not authenticated");
-          const token = await user.getIdToken();
-
-          const response = await fetch('http://localhost:5000/api/admin/bulk-upload', {
+          const response = await apiFetch('/api/admin/bulk-upload', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
             body: JSON.stringify({ students: results.data })
           });
 
