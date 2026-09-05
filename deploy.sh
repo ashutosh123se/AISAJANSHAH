@@ -7,10 +7,13 @@ WEB_DIR="$APP_DIR/public_html"
 
 echo "=== Deploying AI Sajan Shah ==="
 
-# 1. Safely sync git_repo to public_html without deleting node_modules, .env, data, or logs
+# 1. Safely sync git_repo to public_html without permission errors
 if [ -d "$REPO_DIR" ] && [ "$PWD" != "$WEB_DIR" ]; then
     echo "Syncing code from $REPO_DIR to $WEB_DIR..."
-    rsync -av \
+    rsync -r \
+      --no-perms \
+      --no-owner \
+      --no-group \
       --exclude='node_modules' \
       --exclude='.env' \
       --exclude='data' \
@@ -20,7 +23,7 @@ if [ -d "$REPO_DIR" ] && [ "$PWD" != "$WEB_DIR" ]; then
       "$REPO_DIR/" "$WEB_DIR/"
 fi
 
-# 2. Ensure backend node_modules exist (reinstall if they were deleted)
+# 2. Ensure backend node_modules exist
 if [ ! -d "$WEB_DIR/backend/node_modules" ] || [ ! -d "$WEB_DIR/backend/node_modules/express" ]; then
     echo "backend/node_modules missing, running npm install in backend..."
     cd "$WEB_DIR/backend" && npm install --omit=dev
