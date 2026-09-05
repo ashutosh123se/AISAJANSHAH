@@ -347,6 +347,10 @@ app.post('/api/student/activity', verifyToken, async (req, res) => {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const currentDay = days[new Date().getDay()];
     const dailyActivity = { [currentDay]: 1 };
+    return res.status(200).json({ dailyActivity });
+  } catch (error) {
+    console.error('Activity Tracking Error:', error);
+    res.status(500).json({ error: 'Failed to update activity' });
   }
 });
 
