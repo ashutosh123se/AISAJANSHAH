@@ -347,11 +347,31 @@ app.post('/api/student/activity', verifyToken, async (req, res) => {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const currentDay = days[new Date().getDay()];
     const dailyActivity = { [currentDay]: 1 };
-    return res.status(200).json({ dailyActivity });
-  } catch (error) {
-    console.error('Activity Tracking Error:', error);
-    res.status(500).json({ error: 'Failed to update activity' });
   }
+});
+
+// Serve static frontend files from parent directory (web root) and dist
+const fs = require('fs');
+const path = require('path');
+const rootDir = path.join(__dirname, '..');
+const distDir = path.join(__dirname, '..', 'frontend', 'dist');
+
+app.use(express.static(rootDir));
+app.use(express.static(distDir));
+
+// SPA Fallback for client-side routing (fixes 404 on refresh for /login, /student, /admin)
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    return next();
+  }
+  const rootIndex = path.join(rootDir, 'index.html');
+  const distIndex = path.join(distDir, 'index.html');
+  if (fs.existsSync(rootIndex)) {
+    return res.sendFile(rootIndex);
+  } else if (fs.existsSync(distIndex)) {
+    return res.sendFile(distIndex);
+  }
+  next();
 });
 
 const PORT = process.env.PORT || 5000;
