@@ -1,18 +1,18 @@
 <?php
 /**
- * Express Reverse Proxy in PHP for Cloudways
- * Forwards all incoming requests under /api/* to http://127.0.0.1:5000/api/*
+ * Main application reverse proxy for AI Sajan Shah on Cloudways.
+ * Forwards all dynamic routes and /api/* calls to Node.js on port 5000.
  */
 
 error_reporting(0);
 ini_set('display_errors', 0);
 
 $request_uri = $_SERVER['REQUEST_URI'];
-$url = "http://127.0.0.1:5000" . $request_uri;
+$node_backend = 'http://127.0.0.1:5000';
+$url = $node_backend . $request_uri;
 
 $ch = curl_init($url);
 
-// Forward all incoming HTTP request headers
 $incoming_headers = [];
 if (function_exists('getallheaders')) {
     $headers = getallheaders();
@@ -22,17 +22,16 @@ if (function_exists('getallheaders')) {
         }
     }
 }
+
 curl_setopt($ch, CURLOPT_HTTPHEADER, $incoming_headers);
 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $_SERVER['REQUEST_METHOD']);
 curl_setopt($ch, CURLOPT_TIMEOUT, 120);
 
-// Forward POST / PUT / PATCH / DELETE request body payload
 if (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'PATCH', 'DELETE'])) {
     $body = file_get_contents('php://input');
     curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
 }
 
-// Forward response headers
 curl_setopt($ch, CURLOPT_HEADERFUNCTION, function($curl, $header) {
     $len = strlen($header);
     $parts = explode(':', $header, 2);
@@ -45,7 +44,6 @@ curl_setopt($ch, CURLOPT_HEADERFUNCTION, function($curl, $header) {
     return $len;
 });
 
-// Stream response data directly to client (supports Server-Sent Events / SSE for AI chat)
 curl_setopt($ch, CURLOPT_WRITEFUNCTION, function($curl, $data) {
     echo $data;
     if (ob_get_level() > 0) ob_flush();
@@ -56,15 +54,12 @@ curl_setopt($ch, CURLOPT_WRITEFUNCTION, function($curl, $data) {
 $success = curl_exec($ch);
 
 if (!$success) {
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    if ($httpCode === 0) {
-        http_response_code(503);
-        header('Content-Type: application/json');
-        echo json_encode([
-            'error' => 'Backend server is starting or offline on port 5000.',
-            'details' => curl_error($ch)
-        ]);
-    }
+    http_response_code(503);
+    header('Content-Type: application/json');
+    echo json_encode([
+        'error' => 'Node.js backend server on port 5000 is not running.',
+        'details' => curl_error($ch)
+    ]);
 } else {
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     if ($httpCode > 0) {
