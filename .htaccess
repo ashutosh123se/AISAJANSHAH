@@ -2,15 +2,13 @@
   RewriteEngine On
   RewriteBase /
 
-  # 1. Forward all /api requests to api.php (PHP proxy to Node port 5000)
-  RewriteRule ^api/(.*)$ api.php [L,QSA]
-
-  # 2. Direct existing files and directories
+  # 1. Direct existing files and directories (like /api/ and /assets/)
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
-  # 3. SPA Fallback for client-side routing (/login, /student, /admin)
+  # 2. SPA Fallback for client-side routing (/login, /student, /admin)
   RewriteRule ^ index.html [L]
 </IfModule>
+
 
