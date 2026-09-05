@@ -2,13 +2,15 @@
   RewriteEngine On
   RewriteBase /
 
-  # Proxy all /api requests to the Node.js Express backend on port 5000
-  RewriteRule ^api/(.*)$ http://127.0.0.1:5000/api/$1 [P,L]
+  # 1. Forward all /api requests to api.php (PHP proxy to Node port 5000)
+  RewriteRule ^api/(.*)$ api.php [L,QSA]
 
-  # SPA Fallback for client-side routes (/login, /student, /admin)
-  RewriteRule ^index\.html$ - [L]
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteCond %{REQUEST_FILENAME} !-l
-  RewriteRule . /index.html [L]
+  # 2. Direct existing files and directories
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # 3. SPA Fallback for client-side routing (/login, /student, /admin)
+  RewriteRule ^ index.html [L]
 </IfModule>
+
