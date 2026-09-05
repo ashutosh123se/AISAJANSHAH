@@ -61,12 +61,35 @@ const Goals = () => {
     if (userProfile?.onboardingData?.goal90Day && !localStorage.getItem(GOAL_KEY)) {
       setGoal(prev => ({ ...prev, title: userProfile.onboardingData.goal90Day }));
     }
+    if (userProfile?.onboardingData?.weeklyActions && !localStorage.getItem(ACTIONS_KEY)) {
+      setWeeklyActions(userProfile.onboardingData.weeklyActions);
+    }
+    if (userProfile?.onboardingData?.habits && !localStorage.getItem(HABITS_KEY)) {
+      setHabits(userProfile.onboardingData.habits);
+    }
   }, [userProfile]);
+
+  const syncBackend = (updatedGoal, updatedActions, updatedHabits) => {
+    const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+    fetch(`${API_BASE}/api/student/onboarding`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        onboardingData: {
+          ...(userProfile?.onboardingData || {}),
+          goal90Day: updatedGoal?.title || goal.title,
+          weeklyActions: updatedActions || weeklyActions,
+          habits: updatedHabits || habits,
+        }
+      })
+    }).catch(() => {});
+  };
 
   const toggleAction = (id) => {
     setWeeklyActions(prev => {
       const next = prev.map(a => a.id === id ? { ...a, completed: !a.completed } : a);
       try { localStorage.setItem(ACTIONS_KEY, JSON.stringify(next)); } catch {}
+      syncBackend(goal, next, habits);
       return next;
     });
   };
@@ -75,6 +98,7 @@ const Goals = () => {
     setHabits(prev => {
       const next = prev.map(h => h.id === id ? { ...h, checked: !h.checked, streak: h.checked ? Math.max(0, h.streak - 1) : h.streak + 1 } : h);
       try { localStorage.setItem(HABITS_KEY, JSON.stringify(next)); } catch {}
+      syncBackend(goal, weeklyActions, next);
       return next;
     });
   };
@@ -83,6 +107,7 @@ const Goals = () => {
     setGoal(prev => {
       const next = { ...prev, title: tempTitle };
       try { localStorage.setItem(GOAL_KEY, JSON.stringify(next)); } catch {}
+      syncBackend(next, weeklyActions, habits);
       return next;
     });
     setIsEditing(false);
@@ -93,6 +118,7 @@ const Goals = () => {
       setWeeklyActions(prev => {
         const next = [...prev, { id: Date.now(), text: newActionText.trim(), completed: false }];
         try { localStorage.setItem(ACTIONS_KEY, JSON.stringify(next)); } catch {}
+        syncBackend(goal, next, habits);
         return next;
       });
       setNewActionText('');
@@ -105,6 +131,7 @@ const Goals = () => {
       setHabits(prev => {
         const next = [...prev, { id: Date.now(), name: newHabitText.trim(), checked: false, streak: 0 }];
         try { localStorage.setItem(HABITS_KEY, JSON.stringify(next)); } catch {}
+        syncBackend(goal, weeklyActions, next);
         return next;
       });
       setNewHabitText('');
