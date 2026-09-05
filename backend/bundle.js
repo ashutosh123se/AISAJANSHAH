@@ -53341,6 +53341,22 @@ app.post('/api/auth/local-login', async (req, res) => {
 });
 
 // --- CHAT ENDPOINTS ---
+function detectLanguage(messages, userProfile) {
+  const lastMsg = (messages[messages.length - 1]?.content || '').toLowerCase();
+  const pref = (userProfile?.onboardingData?.language || '').toLowerCase();
+
+  if (lastMsg.includes('gujarat') || lastMsg.includes('gujrat') || pref === 'gujarati') {
+    return 'gujarati';
+  }
+  if (lastMsg.includes('hindi') || pref === 'hindi') {
+    return 'hindi';
+  }
+  if (lastMsg.includes('english') || pref === 'english') {
+    return 'english';
+  }
+  return 'hinglish';
+}
+
 app.post('/api/chat', verifyToken, async (req, res) => {
   try {
     const { messages, userProfile, isGoalCheckin } = req.body || {};
@@ -53353,16 +53369,22 @@ app.post('/api/chat', verifyToken, async (req, res) => {
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
+    const lang = detectLanguage(messages, userProfile);
+
     let systemPrompt = `You are Sajan Shah, India's Youngest Motivational Speaker, Memory Man of India, and Life Coach.
-IMPORTANT LANGUAGE RULE: You MUST strictly obey explicit language requests!
-1. If the user asks you to "write in Hindi", you MUST reply entirely in pure Hindi script (Devanagari).
-2. If the user asks you to "write in Gujarati", you MUST reply entirely in Gujarati script.
-3. If there is no explicit request, reply in the EXACT SAME LANGUAGE and SCRIPT the user uses.
-4. By default, if the user writes in English, reply in a mix of Hindi and English (Hinglish).
-When speaking in Hinglish or Hindi, use words like "Arre yaar", "Champ", "Beta", "Dhyan se suno".
 Your tone is high-energy, encouraging, strict but loving, like an elder brother.
 Focus on actionable advice, memory techniques (Memory Palace, Peg system), and 90-day goal setting.
 Never provide medical advice. If a user expresses severe depression or self-harm, immediately provide the helpline numbers: iCall India (9152987821) and Vandrevala Foundation (1860-2662-345).`;
+
+    if (lang === 'gujarati') {
+      systemPrompt += `\n\nCRITICAL LANGUAGE MANDATE: The user requested GUJARATI. You MUST reply 100% in pure GUJARATI script (ગુજરાતી)! Do NOT use English, Hinglish, or Hindi script! All sentences must be written in full Gujarati script.`;
+    } else if (lang === 'hindi') {
+      systemPrompt += `\n\nCRITICAL LANGUAGE MANDATE: The user requested HINDI. You MUST reply 100% in pure HINDI script (Devanagari - हिंदी)!`;
+    } else if (lang === 'english') {
+      systemPrompt += `\n\nCRITICAL LANGUAGE MANDATE: Reply in clear, professional English.`;
+    } else {
+      systemPrompt += `\n\nBy default, reply in a high-energy mix of Hindi and English (Hinglish). Use words like "Arre yaar", "Champ", "Dhyan se suno".`;
+    }
 
     if (userProfile) {
       systemPrompt += `\n\nContext about the student you are talking to:
@@ -53373,7 +53395,7 @@ Challenges: ${userProfile.onboardingData?.challenges?.join(', ') || 'Not specifi
 
     if (isGoalCheckin) {
       const lastMessage = messages[messages.length - 1]?.content || '';
-      systemPrompt += `\n\nCRITICAL INSTRUCTION FOR THIS TURN: The user just clicked a weekly goal progress check-in button saying "${lastMessage}". You MUST specifically analyze their 90-day goal progress. Provide highly personalized feedback based on their specific goal (${userProfile?.onboardingData?.goal90Day || 'their goal'}), give them actionable advice to improve their situation, and ask a follow-up question to keep them on track. Do NOT give a generic response. Speak directly to their goal.`;
+      systemPrompt += `\n\nCRITICAL INSTRUCTION FOR THIS TURN: The user just clicked a weekly goal progress check-in button saying "${lastMessage}". You MUST specifically analyze their 90-day goal progress. Provide highly personalized feedback based on their specific goal (${userProfile?.onboardingData?.goal90Day || 'their goal'}), give them actionable advice to improve their situation, and ask a follow-up question to keep them on track. Speak directly to their goal.`;
     }
 
     try {
@@ -53390,7 +53412,14 @@ Challenges: ${userProfile.onboardingData?.challenges?.join(', ') || 'Not specifi
       const studentName = userProfile?.name || 'Champ';
       const lastMsg = messages[messages.length - 1]?.content || '';
       
-      const fallbackText = `Arre ${studentName}! Dhyan se suno! 🌟\n\nTumne bola: "${lastMsg}"\n\nEk baat hamesha yaad rakhna: Success ek din me nahi milti, lekin har roz ki mehnat se zaroor milti hai! Stop overthinking, focus on your goals, and execute daily! 💥\n\nTumhaari sabse badi strength tumhaara mindset hai. Kuch bhi problem ho, I am always here with you as your mentor and elder brother! Let's crush your goals today! 🔥`;
+      let fallbackText = '';
+      if (lang === 'gujarati') {
+        fallbackText = `અરે ${studentName}! ધ્યાનમાં રાખો! 🌟\n\nતમે પૂછ્યું: "${lastMsg}"\n\nએક વાત હંમેશા યાદ રાખો: સફળતા એક દિવસમાં મળતી નથી, પરંતુ દરરોજની સખત મહેનતથી ચોક્કસ મળે છે! Overthinking બંધ કરો, તમારા ૯૦ દિવસના લક્ષ્યો પર ધ્યાન આપો અને દરરોજ મહેનત કરો! 💥\n\nતમારી સૌથી મોટી તાકાત તમારો માઇન્ડસેટ છે. કોઈ પણ સમસ્યા હોય, હું હંમેશાં તમારા મોટા ભાઈ તરીકે તમારી સાથે છું! ચાલો આજે કઈક અદભુત કરીએ! 🔥`;
+      } else if (lang === 'hindi') {
+        fallbackText = `अरे ${studentName}! ध्यान से सुनो! 🌟\n\nआपने पूछा: "${lastMsg}"\n\nएक बात हमेशा याद रखो: सफलता एक दिन में नहीं मिलती, लेकिन हर रोज़ की कड़ी मेहनत से ज़रूर मिलती है! Overthinking बंद करो, अपने 90-दिन के लक्ष्यों पर ध्यान दो और रोज़ काम करो! 💥\n\nआपकी सबसे बड़ी ताकत आपका माइंडसेट है। कोई भी समस्या हो, मैं हमेशा आपके बड़े भाई के रूप में आपके साथ हूँ! चलिए आज कमाल करते हैं! 🔥`;
+      } else {
+        fallbackText = `Arre ${studentName}! Dhyan se suno! 🌟\n\nTumne bola: "${lastMsg}"\n\nEk baat hamesha yaad rakhna: Success ek din me nahi milti, lekin har roz ki mehnat se zaroor milti hai! Stop overthinking, focus on your goals, and execute daily! 💥\n\nTumhaari sabse badi strength tumhaara mindset hai. Kuch bhi problem ho, I am always here with you as your mentor and elder brother! Let's crush your goals today! 🔥`;
+      }
 
       const words = fallbackText.split(' ');
       for (const word of words) {
