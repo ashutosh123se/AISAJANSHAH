@@ -3,15 +3,26 @@ import { Target, Edit2, Calendar, Clock, Check, Save, Plus, X, Zap, Bot } from '
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 
+const ACTIONS_KEY = 'aisajan_actions_store';
+const HABITS_KEY = 'aisajan_habits_store';
+const GOAL_KEY = 'aisajan_goal_store';
+
+const defaultActions = [
+  { id: 1, text: 'Complete Chapter 4 & 5 of Physics', completed: false },
+  { id: 2, text: 'Take 2 Full-length Mock Tests', completed: true },
+  { id: 3, text: 'Review all incorrect mock test answers', completed: false }
+];
+
+const defaultHabits = [
+  { id: 1, name: 'Meditation (10 mins)', checked: false, streak: 12 },
+  { id: 2, name: 'Read Notes before sleep', checked: true, streak: 5 },
+  { id: 3, name: 'Drink 3L Water', checked: false, streak: 21 }
+];
+
 const Goals = () => {
   const { userProfile } = useAuth();
   const navigate = useNavigate();
   
-  const userKey = userProfile?.uid || userProfile?.email || 'demo';
-  const ACTIONS_KEY = `aisajan_actions_${userKey}`;
-  const HABITS_KEY = `aisajan_habits_${userKey}`;
-  const GOAL_KEY = `aisajan_goal_${userKey}`;
-
   const [goal, setGoal] = useState(() => {
     try {
       const saved = localStorage.getItem(GOAL_KEY);
@@ -31,11 +42,7 @@ const Goals = () => {
       const saved = localStorage.getItem(ACTIONS_KEY);
       if (saved) return JSON.parse(saved);
     } catch {}
-    return [
-      { id: 1, text: 'Complete Chapter 4 & 5 of Physics', completed: false },
-      { id: 2, text: 'Take 2 Full-length Mock Tests', completed: true },
-      { id: 3, text: 'Review all incorrect mock test answers', completed: false }
-    ];
+    return defaultActions;
   });
   const [isAddingAction, setIsAddingAction] = useState(false);
   const [newActionText, setNewActionText] = useState('');
@@ -45,44 +52,49 @@ const Goals = () => {
       const saved = localStorage.getItem(HABITS_KEY);
       if (saved) return JSON.parse(saved);
     } catch {}
-    return [
-      { id: 1, name: 'Meditation (10 mins)', checked: false, streak: 12 },
-      { id: 2, name: 'Read Notes before sleep', checked: true, streak: 5 },
-      { id: 3, name: 'Drink 3L Water', checked: false, streak: 21 }
-    ];
+    return defaultHabits;
   });
   const [isAddingHabit, setIsAddingHabit] = useState(false);
   const [newHabitText, setNewHabitText] = useState('');
 
   useEffect(() => {
-    try {
-      localStorage.setItem(ACTIONS_KEY, JSON.stringify(weeklyActions));
-    } catch {}
-  }, [weeklyActions, ACTIONS_KEY]);
+    if (userProfile?.onboardingData?.goal90Day && !localStorage.getItem(GOAL_KEY)) {
+      setGoal(prev => ({ ...prev, title: userProfile.onboardingData.goal90Day }));
+    }
+  }, [userProfile]);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(HABITS_KEY, JSON.stringify(habits));
-    } catch {}
-  }, [habits, HABITS_KEY]);
+  const toggleAction = (id) => {
+    setWeeklyActions(prev => {
+      const next = prev.map(a => a.id === id ? { ...a, completed: !a.completed } : a);
+      try { localStorage.setItem(ACTIONS_KEY, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(GOAL_KEY, JSON.stringify(goal));
-    } catch {}
-  }, [goal, GOAL_KEY]);
-
-  const toggleAction = (id) => setWeeklyActions(prev => prev.map(a => a.id === id ? { ...a, completed: !a.completed } : a));
-  const toggleHabit = (id) => setHabits(prev => prev.map(h => h.id === id ? { ...h, checked: !h.checked, streak: h.checked ? Math.max(0, h.streak - 1) : h.streak + 1 } : h));
+  const toggleHabit = (id) => {
+    setHabits(prev => {
+      const next = prev.map(h => h.id === id ? { ...h, checked: !h.checked, streak: h.checked ? Math.max(0, h.streak - 1) : h.streak + 1 } : h);
+      try { localStorage.setItem(HABITS_KEY, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
   
   const saveGoal = () => {
-    setGoal(prev => ({ ...prev, title: tempTitle }));
+    setGoal(prev => {
+      const next = { ...prev, title: tempTitle };
+      try { localStorage.setItem(GOAL_KEY, JSON.stringify(next)); } catch {}
+      return next;
+    });
     setIsEditing(false);
   };
 
   const addAction = () => {
     if (newActionText.trim()) {
-      setWeeklyActions(prev => [...prev, { id: Date.now(), text: newActionText.trim(), completed: false }]);
+      setWeeklyActions(prev => {
+        const next = [...prev, { id: Date.now(), text: newActionText.trim(), completed: false }];
+        try { localStorage.setItem(ACTIONS_KEY, JSON.stringify(next)); } catch {}
+        return next;
+      });
       setNewActionText('');
       setIsAddingAction(false);
     }
@@ -90,7 +102,11 @@ const Goals = () => {
 
   const addHabit = () => {
     if (newHabitText.trim()) {
-      setHabits(prev => [...prev, { id: Date.now(), name: newHabitText.trim(), checked: false, streak: 0 }]);
+      setHabits(prev => {
+        const next = [...prev, { id: Date.now(), name: newHabitText.trim(), checked: false, streak: 0 }];
+        try { localStorage.setItem(HABITS_KEY, JSON.stringify(next)); } catch {}
+        return next;
+      });
       setNewHabitText('');
       setIsAddingHabit(false);
     }
