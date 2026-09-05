@@ -6,7 +6,7 @@ import Input from '../../components/ui/Input';
 import { ToastContainer } from '../../components/ui/Toast';
 
 const Profile = () => {
-  const { userProfile } = useAuth();
+  const { userProfile, setUserProfile } = useAuth();
   
   const [formData, setFormData] = useState({
     name: userProfile?.name || '',
@@ -32,12 +32,38 @@ const Profile = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
+    try {
+      const updatedProfile = {
+        ...userProfile,
+        name: formData.name,
+        phone: formData.phone,
+        onboardingData: {
+          ...(userProfile?.onboardingData || {}),
+          language: formData.language,
+        },
+      };
+
+      setUserProfile(updatedProfile);
+
+      const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+      await fetch(`${API_BASE}/api/student/onboarding`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          phone: formData.phone,
+          onboardingData: updatedProfile.onboardingData,
+        }),
+      }).catch(() => {});
+
       addToast('Profile updated successfully!');
-    }, 1000);
+    } catch {
+      addToast('Failed to update profile', 'error');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const getInitials = (name) => {
