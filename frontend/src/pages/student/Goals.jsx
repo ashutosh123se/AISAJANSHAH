@@ -7,33 +7,70 @@ const Goals = () => {
   const { userProfile } = useAuth();
   const navigate = useNavigate();
   
-  const [goal, setGoal] = useState({
-    title: userProfile?.onboardingData?.goal90Day || 'Score 95% in Final Board Exams',
-    targetDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+  const userKey = userProfile?.uid || userProfile?.email || 'demo';
+  const ACTIONS_KEY = `aisajan_actions_${userKey}`;
+  const HABITS_KEY = `aisajan_habits_${userKey}`;
+  const GOAL_KEY = `aisajan_goal_${userKey}`;
+
+  const [goal, setGoal] = useState(() => {
+    try {
+      const saved = localStorage.getItem(GOAL_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return {
+      title: userProfile?.onboardingData?.goal90Day || 'Score 95% in Final Board Exams',
+      targetDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
+    };
   });
   
   const [isEditing, setIsEditing] = useState(false);
   const [tempTitle, setTempTitle] = useState(goal.title);
 
-  const [weeklyActions, setWeeklyActions] = useState([
-    { id: 1, text: 'Complete Chapter 4 & 5 of Physics', completed: false },
-    { id: 2, text: 'Take 2 Full-length Mock Tests', completed: true },
-    { id: 3, text: 'Review all incorrect mock test answers', completed: false }
-  ]);
+  const [weeklyActions, setWeeklyActions] = useState(() => {
+    try {
+      const saved = localStorage.getItem(ACTIONS_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [
+      { id: 1, text: 'Complete Chapter 4 & 5 of Physics', completed: false },
+      { id: 2, text: 'Take 2 Full-length Mock Tests', completed: true },
+      { id: 3, text: 'Review all incorrect mock test answers', completed: false }
+    ];
+  });
   const [isAddingAction, setIsAddingAction] = useState(false);
   const [newActionText, setNewActionText] = useState('');
 
-  const [habits, setHabits] = useState([
-    { id: 1, name: 'Meditation (10 mins)', checked: false, streak: 12 },
-    { id: 2, name: 'Read Notes before sleep', checked: true, streak: 5 },
-    { id: 3, name: 'Drink 3L Water', checked: false, streak: 21 }
-  ]);
+  const [habits, setHabits] = useState(() => {
+    try {
+      const saved = localStorage.getItem(HABITS_KEY);
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return [
+      { id: 1, name: 'Meditation (10 mins)', checked: false, streak: 12 },
+      { id: 2, name: 'Read Notes before sleep', checked: true, streak: 5 },
+      { id: 3, name: 'Drink 3L Water', checked: false, streak: 21 }
+    ];
+  });
   const [isAddingHabit, setIsAddingHabit] = useState(false);
   const [newHabitText, setNewHabitText] = useState('');
 
   useEffect(() => {
-    if (userProfile?.uid) { /* fetch from Firestore */ }
-  }, [userProfile]);
+    try {
+      localStorage.setItem(ACTIONS_KEY, JSON.stringify(weeklyActions));
+    } catch {}
+  }, [weeklyActions, ACTIONS_KEY]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(HABITS_KEY, JSON.stringify(habits));
+    } catch {}
+  }, [habits, HABITS_KEY]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(GOAL_KEY, JSON.stringify(goal));
+    } catch {}
+  }, [goal, GOAL_KEY]);
 
   const toggleAction = (id) => setWeeklyActions(prev => prev.map(a => a.id === id ? { ...a, completed: !a.completed } : a));
   const toggleHabit = (id) => setHabits(prev => prev.map(h => h.id === id ? { ...h, checked: !h.checked, streak: h.checked ? Math.max(0, h.streak - 1) : h.streak + 1 } : h));
@@ -59,7 +96,8 @@ const Goals = () => {
     }
   };
 
-  const daysRemaining = Math.max(0, Math.ceil((goal.targetDate - new Date()) / (1000 * 60 * 60 * 24)));
+  const targetDateObj = new Date(goal.targetDate || Date.now() + 90 * 24 * 60 * 60 * 1000);
+  const daysRemaining = Math.max(0, Math.ceil((targetDateObj - new Date()) / (1000 * 60 * 60 * 24)));
   
   // Calculate dynamic progress
   const totalItems = weeklyActions.length + habits.length;
@@ -139,7 +177,7 @@ const Goals = () => {
           <div className="flex items-center gap-6 mt-6 text-[14px] font-sans font-medium">
             <div className="flex items-center gap-2 text-[var(--color-text-secondary)] bg-[var(--color-bg)] px-3 py-1.5 border border-[var(--color-border)]">
               <Calendar className="w-4 h-4" />
-              Target: {goal.targetDate.toLocaleDateString()}
+              Target: {targetDateObj.toLocaleDateString()}
             </div>
             <div className={`flex items-center gap-2 px-3 py-1.5 border ${daysRemaining < 14 ? 'text-orange-600 bg-orange-50 border-orange-200' : 'text-[var(--color-text-secondary)] bg-[var(--color-bg)] border-[var(--color-border)]'}`}>
               <Clock className={`w-4 h-4 ${daysRemaining < 14 ? 'text-orange-600' : 'text-[var(--color-text-secondary)]'}`} />
