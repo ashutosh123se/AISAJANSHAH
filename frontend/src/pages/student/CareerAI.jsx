@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Compass, Briefcase, GraduationCap, TrendingUp, Search, AlertCircle } from 'lucide-react';
+import { Compass, Briefcase, GraduationCap, TrendingUp, Search, AlertCircle, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { apiFetch } from '../../utils/api';
 import { isDevAuthEnabled } from '../../devAuth';
@@ -100,6 +100,22 @@ const CareerAI = () => {
             </div>
           )}
 
+          {result.isHarmful && (
+            <div className="mb-8 p-6 bg-red-50 border-2 border-red-500 flex items-start gap-4">
+              <div className="w-12 h-12 bg-white border border-red-300 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <h4 className="text-lg font-serif font-bold text-red-900 mb-1">
+                  {result.warningTitle || '⚠️ Unethical & Destructive Path Detected'}
+                </h4>
+                <p className="text-[14px] font-sans text-red-800 leading-relaxed">
+                  {result.warningMessage || `"${query}" is illegal, dangerous, and destructive to society. Real strength comes from building and protecting communities. Sajan AI has redirected your energy toward a noble alternative path below.`}
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-start justify-between mb-8">
             <div>
               <div className="flex items-center gap-3 mb-3">
@@ -114,9 +130,11 @@ const CareerAI = () => {
                 {result.description}
               </p>
             </div>
-            <div className="p-4 flex flex-col items-center justify-center shrink-0 min-w-[100px] bg-green-50 border border-green-200">
-              <span className="text-[28px] font-serif font-bold text-green-700">{result.match}%</span>
-              <span className="text-[11px] font-sans font-bold uppercase tracking-widest text-green-600">Match</span>
+            <div className={`p-4 flex flex-col items-center justify-center shrink-0 min-w-[100px] border ${result.isHarmful ? 'bg-red-50 border-red-200 text-red-700' : 'bg-green-50 border-green-200 text-green-700'}`}>
+              <span className="text-[28px] font-serif font-bold">{result.match}%</span>
+              <span className={`text-[11px] font-sans font-bold uppercase tracking-widest ${result.isHarmful ? 'text-red-600' : 'text-green-600'}`}>
+                {result.isHarmful ? 'Viability' : 'Match'}
+              </span>
             </div>
           </div>
 

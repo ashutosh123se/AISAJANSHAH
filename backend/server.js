@@ -260,24 +260,80 @@ app.post('/api/career/analyze', verifyToken, async (req, res) => {
       return res.status(400).json({ error: 'Valid career query is required' });
     }
 
-    const systemPrompt = `You are Sajan Shah, an expert life coach and mentor. A student is asking you for career advice based on their interest: "${query}".`;
+    const systemPrompt = `You are Sajan Shah, master life coach and career mentor for students. Analyze the user's career query: "${query}".
+
+CRITICAL INSTRUCTIONS & SAFETY RULES:
+1. HARMFUL/ILLEGAL/BAD PROFESSIONS:
+   - If the requested profession is illegal, unethical, violent, destructive, or harmful (e.g. terrorist, thief, criminal, killer, scammer, drug dealer, smuggler, hacker, extortionist, etc.):
+     - Set "isHarmful": true
+     - Set "warningTitle": "⚠️ Unethical & Destructive Path Detected"
+     - Set "warningMessage": Explain firmly and mentor-like why "${query}" is destructive, illegal, and unacceptable. Explain that true courage, power, and leadership come from building and protecting society, not destroying it.
+     - PIVOT to a noble, legal, high-impact alternative (e.g. for "hacker" -> pivot to "Ethical Hacker & Cybersecurity Specialist"; for "terrorist/killer" -> pivot to "National Security Officer / Defense Services / Law Enforcement Leader").
+     - Set "match": 5.
+2. REAL & POSITIVE PROFESSIONS:
+   - Set "isHarmful": false.
+   - Set "match": A realistic score between 85 and 98.
+3. SPECIFIC & RELEVANT ACTION PLAN (NO GENERIC TEMPLATES):
+   - You MUST generate 4 SPECIFIC, STEP-BY-STEP ACTIONABLE steps tailored EXACTLY to the specific requested profession (or noble alternative if flagged).
+   - NEVER output generic advice like "Research 5 real people" or "Master foundational skills".
+   - Each step MUST contain exact tools, exams, certifications, practices, or skills relevant to THAT SPECIFIC PROFESSION.
+
+OUTPUT FORMAT (respond ONLY with valid JSON, no markdown formatting):
+{
+  "isHarmful": false,
+  "warningTitle": "",
+  "warningMessage": "",
+  "title": "Specific Career Trajectory Title",
+  "match": 92,
+  "description": "2-3 sentence inspiring description tailored specifically to this profession from Sajan Shah",
+  "steps": [
+    "Highly specific Step 1 for this exact profession",
+    "Highly specific Step 2 for this exact profession",
+    "Highly specific Step 3 for this exact profession",
+    "Highly specific Step 4 for this exact profession"
+  ],
+  "skills": ["Specific Skill 1", "Specific Skill 2", "Specific Skill 3", "Specific Skill 4", "Specific Skill 5", "Specific Skill 6"]
+}`;
 
     try {
       const analysisResult = await openAIService.generateAnalysis(query, systemPrompt);
       return res.status(200).json(analysisResult);
     } catch (openAiErr) {
       console.error('Career Analysis OpenAI Error:', openAiErr.message);
+
+      const q = query.toLowerCase().trim();
+      const isBad = /terror|thief|robber|killer|murder|criminal|scammer|drug|smuggl|extort|mafia|gangster|crime/.test(q);
+
+      if (isBad) {
+        return res.status(200).json({
+          isHarmful: true,
+          warningTitle: '⚠️ Unethical & Destructive Path Detected',
+          warningMessage: `"${query}" is illegal, dangerous, and destructive to society. True courage, intelligence, and leadership come from protecting people and leaving a legacy of honor. Here is how you can channel your courage into a noble Defense & Security career!`,
+          title: 'National Defense & Security Officer Trajectory',
+          match: 5,
+          description: 'Channel your drive for action and high-stakes decision-making into protecting the nation and leading elite teams with honor.',
+          steps: [
+            'Prepare for NDA / CDS / Defense Service entrance examinations with daily physical fitness.',
+            'Master Strategic Tactics, Leadership principles, and Crisis Management skills.',
+            'Join NCC (National Cadet Corps) or local physical endurance bootcamps.',
+            'Develop unshakeable mental resilience, ethical discipline, and tactical intelligence.'
+          ],
+          skills: ['Tactical Leadership', 'Physical Endurance', 'Ethics & Honor', 'Crisis Management', 'Strategic Decision Making', 'Team Command']
+        });
+      }
+
       return res.status(200).json({
-        title: `${query} Path`,
+        isHarmful: false,
+        title: `${query.charAt(0).toUpperCase() + query.slice(1)} Professional Roadmap`,
         match: 92,
-        description: `This field has massive growth potential! With your dedication and the right roadmap, you can excel in ${query}.`,
+        description: `Exciting choice! ${query} requires targeted skill mastery, practical execution, and consistent dedication. Here is your customized 90-day trajectory.`,
         steps: [
-          "Step 1: Master core foundational skills",
-          "Step 2: Build 2-3 real-world practical projects",
-          "Step 3: Network with industry leaders & mentors",
-          "Step 4: Prepare a high-impact portfolio"
+          `Master core theoretical foundations and key tools needed for professional ${query} work.`,
+          `Build 2-3 specialized real-world projects showcasing your domain expertise in ${query}.`,
+          `Obtain industry-recognized certifications and clear competitive benchmark assessments.`,
+          `Connect with active ${query} professionals and submit high-impact portfolio applications.`
         ],
-        skills: ["Problem Solving", "Critical Thinking", "Communication", "Execution"]
+        skills: ['Domain Expertise', 'Tool Proficiency', 'Critical Thinking', 'Problem Solving', 'Portfolio Building', 'Professional Networking']
       });
     }
   } catch (error) {
