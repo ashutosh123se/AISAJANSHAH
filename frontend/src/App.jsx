@@ -24,6 +24,7 @@ import CareerAI from './pages/student/CareerAI';
 import Profile from './pages/student/Profile';
 import LifeHacks from './pages/student/LifeHacks';
 import StudyHacks from './pages/student/StudyHacks';
+import Progress from './pages/student/Progress';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -74,6 +75,7 @@ const App = () => {
               <Route path="profile" element={<Profile />} />
               <Route path="life-hacks" element={<LifeHacks />} />
               <Route path="study-hacks" element={<StudyHacks />} />
+              <Route path="progress" element={<Progress />} />
             </Route>
 
             {/* Admin Routes */}
