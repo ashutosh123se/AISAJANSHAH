@@ -104,7 +104,7 @@ const MentalHealth = () => {
         </div>
       </div>
 
-      {/* Crisis Resources */}
+      {/* Crisis Resources (Commented out)
       <div className="p-6 lg:p-8 flex items-start gap-5 border border-red-200 bg-red-50">
         <div className="w-12 h-12 bg-white border border-red-200 flex items-center justify-center shrink-0">
           <AlertCircle className="w-6 h-6 text-red-600" />
@@ -122,6 +122,7 @@ const MentalHealth = () => {
           <p className="text-[14px] font-sans mt-4 text-red-700">You are not alone. Professional diagnostic help is available immediately.</p>
         </div>
       </div>
+      */}
     </div>
   );
 };
