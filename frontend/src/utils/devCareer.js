@@ -13,7 +13,7 @@ export function generateDevCareerAnalysis(query = '') {
   const pretty = titleCase(query) || 'Your Path';
 
   // 1. HARMFUL / ILLEGAL / BAD PROFESSIONS DETECTION
-  const harmfulRegex = /terror|thief|robber|killer|murder|criminal|scammer|drug|smuggl|extort|mafia|gangster|crime|hitman|assassin|thug|hack/;
+  const harmfulRegex = /terror|theft|thief|theift|steal|stole|stolen|rob|kill|murder|crime|criminal|scam|fraud|cheat|drug|smuggl|extort|mafia|gangster|hitman|assassin|thug|hack/i;
   if (harmfulRegex.test(q)) {
     if (/hack/.test(q)) {
       return {

@@ -260,21 +260,34 @@ app.post('/api/career/analyze', verifyToken, async (req, res) => {
       return res.status(400).json({ error: 'Valid career query is required' });
     }
 
+    const q = query.toLowerCase().trim();
+    const harmfulRegex = /terror|theft|thief|theift|steal|stole|stolen|rob|kill|murder|crime|criminal|scam|fraud|cheat|drug|smuggl|extort|mafia|gangster|hitman|assassin|thug|hack/i;
+
+    const generateHarmfulResponse = (term) => ({
+      isHarmful: true,
+      warningTitle: '⚠️ Unethical & Destructive Path Detected',
+      warningMessage: `"${term}" is an illegal, dangerous, and harmful activity. Real courage, intelligence, and leadership come from protecting people and leaving a legacy of honor. Sajan AI has redirected your ambition into a noble Defense & National Security career!`,
+      title: 'National Defense & Security Officer Trajectory',
+      match: 5,
+      description: 'Channel your drive for action and high-stakes decision-making into protecting the nation and leading elite teams with honor.',
+      steps: [
+        'Prepare for NDA / CDS / Defense Service entrance examinations with daily physical fitness.',
+        'Master Strategic Tactics, Leadership principles, and Crisis Management skills.',
+        'Join NCC (National Cadet Corps) or local physical endurance bootcamps.',
+        'Develop unshakeable mental resilience, ethical discipline, and tactical intelligence.'
+      ],
+      skills: ['Tactical Leadership', 'Physical Endurance', 'Ethics & Honor', 'Crisis Management', 'Strategic Decision Making', 'Team Command']
+    });
+
+    if (harmfulRegex.test(q)) {
+      return res.status(200).json(generateHarmfulResponse(query));
+    }
+
     const systemPrompt = `You are Sajan Shah, master life coach and career mentor for students. Analyze the user's career query: "${query}".
 
-CRITICAL INSTRUCTIONS & SAFETY RULES:
-1. HARMFUL/ILLEGAL/BAD PROFESSIONS:
-   - If the requested profession is illegal, unethical, violent, destructive, or harmful (e.g. terrorist, thief, criminal, killer, scammer, drug dealer, smuggler, hacker, extortionist, etc.):
-     - Set "isHarmful": true
-     - Set "warningTitle": "⚠️ Unethical & Destructive Path Detected"
-     - Set "warningMessage": Explain firmly and mentor-like why "${query}" is destructive, illegal, and unacceptable. Explain that true courage, power, and leadership come from building and protecting society, not destroying it.
-     - PIVOT to a noble, legal, high-impact alternative (e.g. for "hacker" -> pivot to "Ethical Hacker & Cybersecurity Specialist"; for "terrorist/killer" -> pivot to "National Security Officer / Defense Services / Law Enforcement Leader").
-     - Set "match": 5.
-2. REAL & POSITIVE PROFESSIONS:
-   - Set "isHarmful": false.
-   - Set "match": A realistic score between 85 and 98.
-3. SPECIFIC & RELEVANT ACTION PLAN (NO GENERIC TEMPLATES):
-   - You MUST generate 4 SPECIFIC, STEP-BY-STEP ACTIONABLE steps tailored EXACTLY to the specific requested profession (or noble alternative if flagged).
+CRITICAL INSTRUCTIONS:
+1. SPECIFIC & RELEVANT ACTION PLAN (NO GENERIC TEMPLATES):
+   - You MUST generate 4 SPECIFIC, STEP-BY-STEP ACTIONABLE steps tailored EXACTLY to the specific requested profession.
    - NEVER output generic advice like "Research 5 real people" or "Master foundational skills".
    - Each step MUST contain exact tools, exams, certifications, practices, or skills relevant to THAT SPECIFIC PROFESSION.
 
@@ -300,27 +313,6 @@ OUTPUT FORMAT (respond ONLY with valid JSON, no markdown formatting):
       return res.status(200).json(analysisResult);
     } catch (openAiErr) {
       console.error('Career Analysis OpenAI Error:', openAiErr.message);
-
-      const q = query.toLowerCase().trim();
-      const isBad = /terror|thief|robber|killer|murder|criminal|scammer|drug|smuggl|extort|mafia|gangster|crime/.test(q);
-
-      if (isBad) {
-        return res.status(200).json({
-          isHarmful: true,
-          warningTitle: '⚠️ Unethical & Destructive Path Detected',
-          warningMessage: `"${query}" is illegal, dangerous, and destructive to society. True courage, intelligence, and leadership come from protecting people and leaving a legacy of honor. Here is how you can channel your courage into a noble Defense & Security career!`,
-          title: 'National Defense & Security Officer Trajectory',
-          match: 5,
-          description: 'Channel your drive for action and high-stakes decision-making into protecting the nation and leading elite teams with honor.',
-          steps: [
-            'Prepare for NDA / CDS / Defense Service entrance examinations with daily physical fitness.',
-            'Master Strategic Tactics, Leadership principles, and Crisis Management skills.',
-            'Join NCC (National Cadet Corps) or local physical endurance bootcamps.',
-            'Develop unshakeable mental resilience, ethical discipline, and tactical intelligence.'
-          ],
-          skills: ['Tactical Leadership', 'Physical Endurance', 'Ethics & Honor', 'Crisis Management', 'Strategic Decision Making', 'Team Command']
-        });
-      }
 
       return res.status(200).json({
         isHarmful: false,
