@@ -12,6 +12,7 @@ curl_close($ch);
 
 if ($httpCode !== 200) {
     $serverFile = __DIR__ . '/backend/server.js';
+    @exec("pkill -f 'node backend/server.js' || true");
     @exec("nohup node " . escapeshellarg($serverFile) . " > /tmp/server.log 2>&1 &");
     echo "Node.js backend was offline. Triggered startup script.";
 } else {

@@ -23,7 +23,7 @@ const generateChatResponse = async (messages, systemPrompt) => {
     ];
 
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-4o-mini',
       messages: formattedMessages,
     });
 
@@ -38,7 +38,7 @@ const generateAnalysis = async (text, systemPrompt) => {
   try {
     const openai = getOpenAI();
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: `Analyze the following text according to the system prompt:\n\n${text}` },
@@ -62,7 +62,7 @@ const generateChatStream = async (messages, systemPrompt) => {
     ];
 
     return await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-4o-mini',
       messages: formattedMessages,
       stream: true,
     });
