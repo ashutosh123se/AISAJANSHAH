@@ -181,11 +181,6 @@ const ParagraphTool = () => {
       {/* Result */}
       {result && !isAnalyzing && (
         <div className="mt-8 space-y-6">
-          {devDemo && (
-            <div className="p-4 bg-amber-50 border border-amber-200 text-sm font-sans text-amber-800 rounded-lg">
-              Demo story generated locally. Start the backend with <code className="bg-amber-100 px-1 rounded">OPENAI_API_KEY</code> for real AI-powered stories.
-            </div>
-          )}
 
           {/* Story Card — Main Hero */}
           <div className="bg-white border border-[var(--color-border)] p-8 lg:p-12">

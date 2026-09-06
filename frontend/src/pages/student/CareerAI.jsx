@@ -94,11 +94,6 @@ const CareerAI = () => {
 
       {result && (
         <div className="p-8 lg:p-10 animate-in fade-in slide-in-from-bottom-4 bg-white border border-[var(--color-border)]">
-          {isDemo && (
-            <div className="mb-6 p-4 bg-amber-50 border border-amber-200 text-sm font-sans text-amber-800 rounded-lg">
-              Demo career plan generated locally. Add <code className="bg-amber-100 px-1 rounded">OPENAI_API_KEY</code> to backend/.env for live AI analysis.
-            </div>
-          )}
 
           {result.isHarmful && (
             <div className="mb-8 p-6 bg-red-50 border-2 border-red-500 flex items-start gap-4">
