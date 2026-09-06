@@ -16,10 +16,10 @@ const MentalHealth = () => {
   ];
 
   const modules = [
-    { id: 1, title: 'Exam Stress',       desc: 'Manage anxiety before exams',     icon: BookOpen,      gradient: 'from-blue-500 to-blue-700', hoverColor: 'text-blue-400', hoverBorder: 'hover:border-blue-500/50' },
-    { id: 2, title: 'Focus Issues',      desc: 'Beat distractions scientifically', icon: Focus,         gradient: 'from-emerald-500 to-emerald-700', hoverColor: 'text-emerald-400', hoverBorder: 'hover:border-emerald-500/50' },
-    { id: 3, title: 'Low Confidence',    desc: 'Build unshakeable self-belief',    icon: Shield,        gradient: 'from-orange-500 to-orange-700', hoverColor: 'text-orange-400', hoverBorder: 'hover:border-orange-500/50' },
-    { id: 4, title: 'Parental Pressure', desc: 'Handle expectations with ease',    icon: HeartHandshake, gradient: 'from-purple-500 to-purple-700', hoverColor: 'text-purple-400', hoverBorder: 'hover:border-purple-500/50' },
+    { id: 1, title: 'Exam Stress',       desc: 'Manage anxiety before exams',     icon: BookOpen,      gradient: 'from-blue-500 to-blue-700', hoverColor: 'text-blue-400', hoverBorder: 'hover:border-blue-500/50', prompt: 'Hi Sajan! I am experiencing exam stress and anxiety before my exams. Can you help me manage this and give me practical strategies to stay calm and perform at my best?' },
+    { id: 2, title: 'Focus Issues',      desc: 'Beat distractions scientifically', icon: Focus,         gradient: 'from-emerald-500 to-emerald-700', hoverColor: 'text-emerald-400', hoverBorder: 'hover:border-emerald-500/50', prompt: 'Hi Sajan! I am facing focus issues and get easily distracted while studying. Can you guide me with scientific techniques to improve my concentration and study effectively?' },
+    { id: 3, title: 'Low Confidence',    desc: 'Build unshakeable self-belief',    icon: Shield,        gradient: 'from-orange-500 to-orange-700', hoverColor: 'text-orange-400', hoverBorder: 'hover:border-orange-500/50', prompt: 'Hi Sajan! I am dealing with low confidence and self-doubt lately. How can I build unshakeable self-belief and regain my confidence?' },
+    { id: 4, title: 'Parental Pressure', desc: 'Handle expectations with ease',    icon: HeartHandshake, gradient: 'from-purple-500 to-purple-700', hoverColor: 'text-purple-400', hoverBorder: 'hover:border-purple-500/50', prompt: 'Hi Sajan! I am feeling a lot of parental pressure and high expectations. Can you give me guidance on how to handle these expectations with ease and peace of mind?' },
   ];
 
   return (
@@ -62,7 +62,7 @@ const MentalHealth = () => {
             </div>
             {['low', 'anxious', 'okay'].includes(selectedMood.id) && (
               <div className="flex flex-wrap justify-center gap-4">
-                <button onClick={() => navigate('/student/chat')}
+                <button onClick={() => navigate('/student/chat', { state: { initialMessage: `Hi Sajan! I am feeling ${selectedMood.label.toLowerCase()} today. ${selectedMood.msg}` } })}
                   className="btn-elegant px-8 py-3.5">
                   Initialize Sajan AI
                 </button>
@@ -89,7 +89,7 @@ const MentalHealth = () => {
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
           {modules.map((mod) => (
-            <div key={mod.id} onClick={() => navigate('/student/chat')}
+            <div key={mod.id} onClick={() => navigate('/student/chat', { state: { initialMessage: mod.prompt } })}
               className={`p-6 lg:p-8 cursor-pointer transition-all duration-300 relative group bg-white border border-[var(--color-border)] hover:border-[var(--color-primary)]`}>
               <div className={`w-12 h-12 flex items-center justify-center mb-5 border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-primary)]`}>
                 <mod.icon className="w-6 h-6" />
