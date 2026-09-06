@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'aisajanshah-backend',
-      script: 'backend/bundle.js',
+      script: 'backend/server.js',
       cwd: '/home/master/applications/jpkbjeavpe/public_html',
       env: {
         PORT: 5000,

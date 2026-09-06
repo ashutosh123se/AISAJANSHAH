@@ -27,8 +27,9 @@ if pm2 describe aisajanshah-backend &> /dev/null; then
     pm2 restart ecosystem.config.js
 else
     echo "Starting backend with PM2 for the first time..."
-    # Kill any leftover nohup node processes
+    # Kill any leftover node processes
     pkill -f "node backend/bundle.js" || true
+    pkill -f "node backend/server.js" || true
     sleep 1
     pm2 start ecosystem.config.js
 fi
