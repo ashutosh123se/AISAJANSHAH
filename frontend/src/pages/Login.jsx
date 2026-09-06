@@ -81,7 +81,7 @@ const Login = () => {
           <div className="auth-logo-showcase">
             <div className="auth-logo-orbit-ring" aria-hidden="true" />
             <div className="auth-logo-diamond">
-              <Sparkles className="w-8 h-8" strokeWidth={1.5} />
+              <img src="/favicon.png" alt="Sajan Shah Logo" className="w-9 h-9 object-contain" />
             </div>
             <span className="auth-logo-live">
               <span className="auth-logo-live-dot" />

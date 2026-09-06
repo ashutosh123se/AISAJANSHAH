@@ -39,7 +39,7 @@ const LoadingScreen = ({ error }) => {
           <div className="flex flex-col items-center gap-8 bg-white border border-[var(--color-border)] p-12">
             
             <div className="relative w-16 h-16 border border-[var(--color-border)] bg-[var(--color-bg)] flex items-center justify-center z-10">
-              <Sparkles className="w-8 h-8 text-[var(--color-primary)]" />
+              <img src="/favicon.png" alt="Sajan Shah Logo" className="w-10 h-10 object-contain" />
               {/* Optional: Simple pulse border effect */}
               <motion.div
                 animate={{ scale: [1, 1.2], opacity: [0.5, 0] }}

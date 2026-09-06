@@ -52,7 +52,7 @@ const StudentSidebar = () => {
     <div className="w-full h-full bg-white flex flex-col overflow-y-auto">
       {/* Brand */}
       <div className="p-8 flex items-center gap-3 shrink-0">
-        <Sparkles className="w-6 h-6 text-[var(--color-accent)]" />
+        <img src="/favicon.png" alt="Sajan Shah Logo" className="w-9 h-9 object-contain shrink-0" />
         <div className="flex whitespace-nowrap items-baseline gap-1">
           <span className="font-serif font-bold text-xl text-[var(--color-primary)]">AI</span>
           <span className="font-serif font-bold text-xl text-[var(--color-primary)]">Sajan Shah</span>
