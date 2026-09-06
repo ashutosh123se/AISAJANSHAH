@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiFetch } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
+import { updateLocalSession } from '../devAuth';
 import { ChevronLeft, Check } from 'lucide-react';
 import Button from '../components/ui/Button';
 
@@ -28,8 +29,6 @@ const Onboarding = () => {
   const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
 
   const handleFinish = async () => {
-    if (!userProfile?.uid) return;
-    
     try {
       setIsSubmitting(true);
       setSubmitError('');
@@ -47,23 +46,36 @@ const Onboarding = () => {
           situation,
           challenges: allChallenges,
           goal90Day,
-          language
+          language: language || 'hinglish'
         }
       };
 
-      const response = await apiFetch('/api/student/onboarding', {
-        method: 'POST',
-        body: JSON.stringify({
-          name: updateData.name,
-          onboardingData: updateData.onboardingData,
-        }),
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(data.error || data.details || 'Failed to save onboarding');
+      try {
+        const response = await apiFetch('/api/student/onboarding', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: updateData.name,
+            onboardingData: updateData.onboardingData,
+          }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (data.user) {
+          Object.assign(updateData, data.user);
+        }
+      } catch (apiErr) {
+        console.warn('API save warning during onboarding:', apiErr);
       }
-      const nextProfile = { ...userProfile, ...updateData, ...(data.user || {}) };
+
+      const nextProfile = {
+        ...(userProfile || {}),
+        ...updateData,
+        uid: userProfile?.uid || userProfile?.id || 'local-student-demo',
+        onboardingComplete: true,
+        onboardingCompleted: true,
+      };
+
       setUserProfile(nextProfile);
+      updateLocalSession(nextProfile);
 
       navigate('/student');
     } catch (err) {
