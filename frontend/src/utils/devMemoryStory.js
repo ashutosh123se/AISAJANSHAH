@@ -13,17 +13,22 @@ export function generateDevMemoryStory(text) {
   const w = (i, fallback) => words[i] || fallback;
 
   return {
-    title: `The ${w(0, 'Magic')} Elephant's Wild Adventure`,
-    story: `Arre yaar, picture this: A flying elephant named ${w(0, 'Bholu')} wearing orange sunglasses crash-landed on a giant textbook about "${w(1, 'history')}". Beside him, a dancing robot kept shouting "${w(2, 'revolution')}" while juggling ${w(3, 'facts')} like cricket balls! A talking parrot narrated the story of ${w(4, 'communists')} who split from a party to lead peasant struggles — all while riding a bicycle made of ${w(5, 'memories')}. Totally illogical. Totally unforgettable. 🐘🤖🦜`,
+    title: `The Super Funny ${w(0, 'Magic')} Dino Adventure! 🦖✨`,
+    story: `1. Ek din ek super-cool skateboarding dino named ${w(0, 'Bholu')} wearing red sunglasses came flying down!
+2. Usne head par giant book pehni thi jisme "${w(1, 'topic')}" likha tha.
+3. Beside him, a magical parrot kept shouting "${w(2, 'key fact')}" while eating yummy ice-cream!
+4. Parrot ne bola: "Chalo, aaj hum ${w(3, 'concept')} ke baare me seekhenge!"
+5. A magic bicycle made of glowing stars rolled by, carrying ${w(4, 'detail')} all over the town!
+6. All the kids laughed and danced together because learning ${w(5, 'summary')} became as easy as playing a fun game.
+7. Ye funny kahani aapke dimaag me fixed ho gayi! 🚀`,
     conceptMap: [
-      { storyElement: `flying elephant ${w(0, 'Bholu')}`, realConcept: `Key theme: ${w(0, 'main concept from your text')}`, emoji: '🐘' },
-      { storyElement: 'dancing robot', realConcept: `Related idea: ${w(1, 'second concept')}`, emoji: '🤖' },
-      { storyElement: 'talking parrot', realConcept: `Movement/event: ${w(2, 'third concept')}`, emoji: '🦜' },
-      { storyElement: 'bicycle of memories', realConcept: `Important detail: ${w(3, 'fourth concept')}`, emoji: '🚲' },
-      { storyElement: 'orange sunglasses', realConcept: `Context: ${w(4, 'fifth concept')}`, emoji: '🕶️' },
-      { storyElement: 'giant textbook', realConcept: `Summary anchor: ${w(5, 'sixth concept')}`, emoji: '📚' },
+      { storyElement: `Skateboarding Dino ${w(0, 'Bholu')}`, realConcept: `Main Topic: ${w(0, 'first key word')}`, emoji: '🦖' },
+      { storyElement: 'Giant Book Crown', realConcept: `Key Idea: ${w(1, 'second key word')}`, emoji: '📚' },
+      { storyElement: 'Talking Parrot', realConcept: `Important Fact: ${w(2, 'third key word')}`, emoji: '🦜' },
+      { storyElement: 'Magic Star Bicycle', realConcept: `Detail: ${w(3, 'fourth key word')}`, emoji: '🚲' },
+      { storyElement: 'Red Sunglasses', realConcept: `Extra Context: ${w(4, 'fifth key word')}`, emoji: '🕶️' },
     ],
-    memoryHook: `Elephant + Robot + Parrot = ${w(0, 'your topic')} locked forever!`,
-    quickRevision: text.trim().slice(0, 280) + (text.length > 280 ? '…' : ''),
+    memoryHook: `Dino + Parrot + Star Bicycle = ${w(0, 'your topic')} locked in memory forever! 🔒✨`,
+    quickRevision: `Super Simple Summary: ${text.trim().slice(0, 200)}${text.length > 200 ? '…' : ''}`,
   };
 }
