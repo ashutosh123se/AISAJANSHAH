@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Target, Edit2, Calendar, Clock, Check, Save, Plus, X, Zap, Bot } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { apiFetch } from '../../utils/api';
 
 const ACTIONS_KEY = 'aisajan_actions_store';
 const HABITS_KEY = 'aisajan_habits_store';
@@ -20,7 +21,7 @@ const defaultHabits = [
 ];
 
 const Goals = () => {
-  const { userProfile } = useAuth();
+  const { userProfile, setUserProfile } = useAuth();
   const navigate = useNavigate();
   
   const [goal, setGoal] = useState(() => {
@@ -57,6 +58,51 @@ const Goals = () => {
   const [isAddingHabit, setIsAddingHabit] = useState(false);
   const [newHabitText, setNewHabitText] = useState('');
 
+  // On mount: fetch the latest profile from the backend and hydrate state
+  useEffect(() => {
+    let cancelled = false;
+    const fetchLatestProfile = async () => {
+      try {
+        const res = await apiFetch('/api/student/onboarding', {
+          method: 'POST',
+          body: JSON.stringify({
+            onboardingData: userProfile?.onboardingData || {},
+          }),
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const serverData = data?.user?.onboardingData;
+        if (!cancelled && serverData) {
+          // Update auth context with the latest server profile
+          if (data.user) {
+            setUserProfile(prev => ({ ...(prev || {}), ...data.user }));
+          }
+          // Only populate from server if localStorage doesn't already have data
+          if (!localStorage.getItem(GOAL_KEY) && serverData.goal90Day) {
+            const goalObj = {
+              title: serverData.goal90Day,
+              targetDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
+            };
+            setGoal(goalObj);
+            setTempTitle(serverData.goal90Day);
+          }
+          if (!localStorage.getItem(ACTIONS_KEY) && serverData.weeklyActions) {
+            setWeeklyActions(serverData.weeklyActions);
+          }
+          if (!localStorage.getItem(HABITS_KEY) && serverData.habits) {
+            setHabits(serverData.habits);
+          }
+        }
+      } catch {}
+    };
+
+    if (userProfile?.uid) {
+      fetchLatestProfile();
+    }
+    return () => { cancelled = true; };
+  }, []); // Run once on mount
+
+  // Fallback: populate from userProfile context if no localStorage data
   useEffect(() => {
     if (userProfile?.onboardingData?.goal90Day && !localStorage.getItem(GOAL_KEY)) {
       setGoal(prev => ({ ...prev, title: userProfile.onboardingData.goal90Day }));
@@ -70,19 +116,27 @@ const Goals = () => {
   }, [userProfile]);
 
   const syncBackend = (updatedGoal, updatedActions, updatedHabits) => {
-    const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
-    fetch(`${API_BASE}/api/student/onboarding`, {
+    const newOnboardingData = {
+      ...(userProfile?.onboardingData || {}),
+      goal90Day: updatedGoal?.title || goal.title,
+      weeklyActions: updatedActions || weeklyActions,
+      habits: updatedHabits || habits,
+    };
+
+    apiFetch('/api/student/onboarding', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        onboardingData: {
-          ...(userProfile?.onboardingData || {}),
-          goal90Day: updatedGoal?.title || goal.title,
-          weeklyActions: updatedActions || weeklyActions,
-          habits: updatedHabits || habits,
+        onboardingData: newOnboardingData,
+      }),
+    })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        // Update auth session context so profile stays current across refreshes
+        if (data?.user) {
+          setUserProfile(prev => ({ ...(prev || {}), ...data.user, onboardingData: newOnboardingData }));
         }
       })
-    }).catch(() => {});
+      .catch(() => {});
   };
 
   const toggleAction = (id) => {

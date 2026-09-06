@@ -1,0 +1,201 @@
+{
+  "users": {
+    "local-admin-001": {
+      "id": "local-admin-001",
+      "email": "admin@aisajanshah.com",
+      "name": "Platform Admin",
+      "role": "admin",
+      "status": "active",
+      "password": "Admin@1234sa",
+      "onboardingComplete": true,
+      "onboardingCompleted": true,
+      "createdAt": "2026-09-05T07:27:56.309Z"
+    },
+    "local-student-001": {
+      "id": "local-student-001",
+      "email": "sharma.dhruv@mca.christuniversity.in",
+      "name": "Dhruv Sharma",
+      "phone": "",
+      "workshop": "Memory Workshop",
+      "role": "student",
+      "status": "active",
+      "onboardingComplete": true,
+      "onboardingCompleted": true,
+      "xp": 40,
+      "level": 1,
+      "createdAt": "2026-07-26T03:25:31.535Z",
+      "password": "Password@123"
+    },
+    "local-student-4df448d6": {
+      "id": "local-student-4df448d6",
+      "email": "ashutoshshekhar32@gmail.com",
+      "name": "Ashutosh Shekhar",
+      "phone": "+919431471654",
+      "workshop": "Memory Workshop",
+      "role": "student",
+      "status": "active",
+      "password": "Ashutosh@1234sa",
+      "createdAt": "2026-07-26T04:20:24.722Z",
+      "onboardingComplete": true,
+      "onboardingCompleted": true,
+      "xp": 0,
+      "level": 1,
+      "onboardingData": {
+        "ageGroup": "15 — 18",
+        "situation": "College Student",
+        "challenges": [
+          "Focus & Concentration",
+          "Career Confusion",
+          "Phone Addiction",
+          "Parental Pressure",
+          "Low Confidence",
+          "Exam Stress"
+        ],
+        "goal90Day": "njsknkjcashjcsn",
+        "language": "english"
+      },
+      "updatedAt": "2026-07-26T04:21:13.551Z"
+    },
+    "local-student-636ff923": {
+      "id": "local-student-636ff923",
+      "email": "ashutoshshekhar052@gmail.com",
+      "name": "Ashutosh",
+      "phone": "8849691024",
+      "workshop": "Memory Workshop",
+      "role": "student",
+      "status": "active",
+      "password": "Ashutosh@1234sa",
+      "createdAt": "2026-08-26T08:56:19.046Z",
+      "onboardingComplete": true,
+      "onboardingCompleted": true,
+      "xp": 0,
+      "level": 1,
+      "onboardingData": {
+        "ageGroup": "18 — 25",
+        "situation": "Working Professional",
+        "challenges": [
+          "Career Confusion"
+        ],
+        "goal90Day": "fjwiodjckl",
+        "language": "hinglish"
+      },
+      "updatedAt": "2026-08-26T08:56:45.582Z"
+    },
+    "local-student-demo": {
+      "id": "local-student-demo",
+      "email": "ashutoshshekhar37@gmail.com",
+      "name": "Ashutosh Shekhar",
+      "phone": "",
+      "workshop": "Memory Workshop",
+      "role": "student",
+      "status": "active",
+      "password": "Ashutosh@1234sa",
+      "onboardingComplete": true,
+      "onboardingCompleted": true,
+      "xp": 120,
+      "level": 3,
+      "createdAt": "2026-09-05T07:29:05.519Z"
+    }
+  },
+  "emailLogs": [
+    {
+      "id": "log-1787734579046",
+      "to": "ashutoshshekhar052@gmail.com",
+      "type": "welcome",
+      "subject": "Welcome to AI Sajan Shah",
+      "sentAt": "2026-08-26T08:56:19.046Z",
+      "status": "not_delivered",
+      "note": "Email not sent — SendGrid is not configured in dig mode"
+    },
+    {
+      "id": "log-1785039624722",
+      "to": "ashutoshshekhar32@gmail.com",
+      "type": "welcome",
+      "subject": "Welcome to AI Sajan Shah",
+      "sentAt": "2026-07-26T04:20:24.722Z",
+      "status": "not_delivered",
+      "note": "Email not sent — SendGrid is not configured in dig mode"
+    },
+    {
+      "id": "log-1785039231874",
+      "to": "ashutoshshekhar32@gmail.com",
+      "type": "welcome",
+      "subject": "Welcome to AI Sajan Shah",
+      "sentAt": "2026-07-26T04:13:51.874Z",
+      "status": "not_delivered",
+      "note": "Email not sent — SendGrid is not configured in dig mode"
+    },
+    {
+      "id": "log-1785039036352",
+      "to": "ashutoshshekhar32@gmail.com",
+      "type": "welcome",
+      "subject": "Welcome to AI Sajan Shah",
+      "sentAt": "2026-07-26T04:10:36.352Z",
+      "status": "not_delivered",
+      "note": "Email not sent — SendGrid is not configured in dig mode"
+    },
+    {
+      "id": "log-1785038404914",
+      "to": "ashutoshshekhar32@gmail.com",
+      "type": "welcome",
+      "subject": "Welcome to AI Sajan Shah",
+      "sentAt": "2026-07-26T04:00:04.914Z",
+      "status": "not_delivered",
+      "note": "Email not sent — SendGrid is not configured in dig mode"
+    },
+    {
+      "id": "log-1785037857778",
+      "to": "ashutoshshekhar32@gmail.com",
+      "type": "welcome",
+      "subject": "Welcome to AI Sajan Shah",
+      "sentAt": "2026-07-26T03:50:57.778Z",
+      "status": "not_delivered",
+      "note": "Email not sent — SendGrid is not configured in dig mode"
+    },
+    {
+      "id": "log-1785037115826",
+      "to": "ashutoshshekhar32@gmail.com",
+      "type": "welcome",
+      "subject": "Welcome to AI Sajan Shah",
+      "sentAt": "2026-07-26T03:38:35.826Z",
+      "status": "not_delivered",
+      "note": "Email not sent — SendGrid is not configured in dig mode"
+    },
+    {
+      "id": "log-1785036353791",
+      "to": "bulk_b_1785036353783@example.com",
+      "type": "welcome",
+      "subject": "Welcome to AI Sajan Shah",
+      "sentAt": "2026-07-26T03:25:53.791Z",
+      "status": "not_delivered",
+      "note": "Email not sent — SendGrid is not configured in dig mode"
+    },
+    {
+      "id": "log-1785036353788",
+      "to": "bulk_a_1785036353783@example.com",
+      "type": "welcome",
+      "subject": "Welcome to AI Sajan Shah",
+      "sentAt": "2026-07-26T03:25:53.788Z",
+      "status": "not_delivered",
+      "note": "Email not sent — SendGrid is not configured in dig mode"
+    },
+    {
+      "id": "log-1785036353776",
+      "to": "smoke_1785036353712@example.com",
+      "type": "welcome",
+      "subject": "Welcome to AI Sajan Shah",
+      "sentAt": "2026-07-26T03:25:53.776Z",
+      "status": "not_delivered",
+      "note": "Email not sent — SendGrid is not configured in dig mode"
+    },
+    {
+      "id": "log-1785036331545",
+      "to": "verify_1785036331544@ex.com",
+      "type": "welcome",
+      "subject": "Welcome to AI Sajan Shah",
+      "sentAt": "2026-07-26T03:25:31.545Z",
+      "status": "not_delivered",
+      "note": "Email not sent — SendGrid is not configured in dig mode"
+    }
+  ]
+}

@@ -14,13 +14,19 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const setUserProfile = (profile) => {
-    setUserProfileState(profile);
-    if (profile) {
-      updateLocalSession(profile);
-      setIsAdmin(profile.role === 'admin');
-    }
+  const setUserProfile = (profileOrUpdater) => {
+    setUserProfileState(prev => {
+      const next = typeof profileOrUpdater === 'function'
+        ? profileOrUpdater(prev)
+        : profileOrUpdater;
+      if (next) {
+        updateLocalSession(next);
+        setIsAdmin(next.role === 'admin');
+      }
+      return next;
+    });
   };
+
 
   useEffect(() => {
     const session = getDevSession();
