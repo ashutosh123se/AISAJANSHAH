@@ -24,55 +24,63 @@ if (function_exists('getallheaders')) {
         }
     }
 }
-curl_setopt($ch, CURLOPT_HTTPHEADER, $incoming_headers);
-curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $_SERVER['REQUEST_METHOD']);
-curl_setopt($ch, CURLOPT_TIMEOUT, 120);
-curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 
-// Forward request payload for POST/PUT/PATCH/DELETE
-if (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'PATCH', 'DELETE'])) {
-    $body = file_get_contents('php://input');
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
-}
+function execute_proxy_curl_api($url, $incoming_headers) {
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $incoming_headers);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $_SERVER['REQUEST_METHOD']);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 120);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 
-// Forward response status and headers
-curl_setopt($ch, CURLOPT_HEADERFUNCTION, function($curl, $header) {
-    $len = strlen($header);
-    $parts = explode(':', $header, 2);
-    if (count($parts) === 2) {
-        $name = strtolower(trim($parts[0]));
-        if (!in_array($name, ['transfer-encoding', 'content-length', 'connection'])) {
-            header(trim($header));
+    if (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'PATCH', 'DELETE'])) {
+        $body = file_get_contents('php://input');
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+    }
+
+    curl_setopt($ch, CURLOPT_HEADERFUNCTION, function($curl, $header) {
+        $len = strlen($header);
+        $parts = explode(':', $header, 2);
+        if (count($parts) === 2) {
+            $name = strtolower(trim($parts[0]));
+            if (!in_array($name, ['transfer-encoding', 'content-length', 'connection'])) {
+                header(trim($header));
+            }
         }
-    }
-    return $len;
-});
+        return $len;
+    });
 
-// Stream response data directly to client (supports Server-Sent Events for AI chat)
-curl_setopt($ch, CURLOPT_WRITEFUNCTION, function($curl, $data) {
-    echo $data;
-    if (ob_get_level() > 0) ob_flush();
-    flush();
-    return strlen($data);
-});
+    curl_setopt($ch, CURLOPT_WRITEFUNCTION, function($curl, $data) {
+        echo $data;
+        if (ob_get_level() > 0) ob_flush();
+        flush();
+        return strlen($data);
+    });
 
-$success = curl_exec($ch);
+    $success = curl_exec($ch);
+    $err = curl_error($ch);
+    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
 
-if (!$success) {
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    if ($httpCode === 0) {
-        http_response_code(503);
-        header('Content-Type: application/json');
-        echo json_encode([
-            'error' => 'Backend server is starting or offline.',
-            'details' => curl_error($ch)
-        ]);
-    }
-} else {
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    if ($httpCode > 0) {
-        http_response_code($httpCode);
+    return ['success' => $success, 'error' => $err, 'code' => $code];
+}
+
+$res = execute_proxy_curl_api($url, $incoming_headers);
+
+// If port 5000 is down, auto-start Node backend and retry once!
+if (!$res['success']) {
+    $server_file = __DIR__ . '/backend/server.js';
+    if (file_exists($server_file)) {
+        @exec("nohup node " . escapeshellarg($server_file) . " > /tmp/server.log 2>&1 &");
+        usleep(1500000); // Wait 1.5 seconds for Node server to start
+        $res = execute_proxy_curl_api($url, $incoming_headers);
     }
 }
 
-curl_close($ch);
+if (!$res['success']) {
+    http_response_code(503);
+    header('Content-Type: application/json');
+    echo json_encode([
+        'error' => 'Backend server is starting or offline.',
+        'details' => $res['error']
+    ]);
+}
