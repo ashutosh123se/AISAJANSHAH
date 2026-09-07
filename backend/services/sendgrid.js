@@ -2,7 +2,9 @@ const sgMail = require('@sendgrid/mail');
 const dotenv = require('dotenv');
 dotenv.config();
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+if (process.env.SENDGRID_API_KEY && process.env.SENDGRID_API_KEY.startsWith('SG.')) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+}
 
 const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'noreply@ai.sajanshah.com';
 
