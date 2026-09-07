@@ -37,11 +37,11 @@ fi
 $PM2_CMD save 2>/dev/null || true
 
 # 5. Setup PM2 startup script (auto-start on server reboot)
-pm2 startup 2>/dev/null || true
+$PM2_CMD startup 2>/dev/null || true
 
 sleep 2
 echo ""
-pm2 status
+$PM2_CMD status
 echo ""
 curl -s http://127.0.0.1:5000/api/health || echo "⚠️ Backend starting..."
 echo ""
