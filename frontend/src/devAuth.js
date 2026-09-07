@@ -66,10 +66,10 @@ export async function devLogin(email, password) {
   }
 
   const data = await response.json().catch(() => ({}));
+  if (data.error) {
+    throw new Error(data.error);
+  }
   if (!response.ok) {
-    if (data.error) {
-      throw new Error(data.error);
-    }
     if (response.status === 404) {
       throw new Error('API server route not found (404). Ensure backend is running on port 5000.');
     }
@@ -81,7 +81,7 @@ export async function devLogin(email, password) {
 
   const profile = normalizeProfile(data.user);
   if (!profile?.uid) {
-    throw new Error('Login succeeded but profile was incomplete.');
+    throw new Error('Invalid email or password.');
   }
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));

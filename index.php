@@ -71,6 +71,10 @@ if (strpos($path, '/api') === 0) {
 
     $res = execute_proxy_curl($url, $incoming_headers);
 
+    if ($res['code'] > 0) {
+        http_response_code($res['code']);
+    }
+
     // If port 5000 is down, auto-start Node backend and poll until online
     if (!$res['success']) {
         $server_file = __DIR__ . '/backend/server.js';
