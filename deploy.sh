@@ -15,27 +15,26 @@ fi
 
 cd "$WEB_DIR" || exit 1
 
-# 2. Install PM2 if not already installed
+# 2. Determine PM2 binary (global pm2 or npx pm2)
+PM2_CMD="pm2"
 if ! command -v pm2 &> /dev/null; then
-    echo "Installing PM2 process manager..."
-    npm install -g pm2
+    PM2_CMD="npx pm2"
 fi
 
 # 3. Start or restart the backend with PM2
-if pm2 describe aisajanshah-backend &> /dev/null; then
+if $PM2_CMD describe aisajanshah-backend &> /dev/null; then
     echo "Restarting backend with PM2..."
-    pm2 restart ecosystem.config.js
+    $PM2_CMD restart ecosystem.config.js
 else
-    echo "Starting backend with PM2 for the first time..."
-    # Kill any leftover node processes
+    echo "Starting backend with PM2..."
     pkill -f "node backend/bundle.js" || true
     pkill -f "node backend/server.js" || true
     sleep 1
-    pm2 start ecosystem.config.js
+    $PM2_CMD start ecosystem.config.js
 fi
 
-# 4. Save PM2 process list (survives server reboot)
-pm2 save
+# 4. Save PM2 process list
+$PM2_CMD save 2>/dev/null || true
 
 # 5. Setup PM2 startup script (auto-start on server reboot)
 pm2 startup 2>/dev/null || true

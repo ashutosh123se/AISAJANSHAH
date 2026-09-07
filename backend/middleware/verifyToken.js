@@ -1,4 +1,5 @@
-const { isLocalAdmin } = require('../services/localStore');
+const localStore = require('../services/localStore');
+const { isLocalAdmin } = localStore;
 
 /**
  * Accepts Bearer local-token-{uid} or dev-token-{uid}.
@@ -17,7 +18,11 @@ const verifyToken = async (req, res, next) => {
     if (!uid) {
       return res.status(403).json({ error: 'Unauthorized: Invalid token' });
     }
-    req.user = { uid, local: true };
+    const user = localStore.getUser(uid);
+    if (!user || user.status === 'inactive') {
+      return res.status(403).json({ error: 'Unauthorized: User does not exist or is inactive' });
+    }
+    req.user = { uid: user.id, role: user.role, local: true };
     return next();
   }
 

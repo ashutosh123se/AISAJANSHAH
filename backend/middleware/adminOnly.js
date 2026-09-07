@@ -7,7 +7,7 @@ const adminOnly = async (req, res, next) => {
       return res.status(403).json({ error: 'Forbidden: Missing user' });
     }
 
-    if (isLocalAdmin(uid) || String(uid).includes('admin')) {
+    if (isLocalAdmin(uid)) {
       return next();
     }
 

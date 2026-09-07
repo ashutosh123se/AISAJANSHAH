@@ -66,13 +66,18 @@ function execute_proxy_curl_api($url, $incoming_headers) {
 
 $res = execute_proxy_curl_api($url, $incoming_headers);
 
-// If port 5000 is down, auto-start Node backend and retry once!
+// If port 5000 is down, auto-start Node backend and poll until online
 if (!$res['success']) {
     $server_file = __DIR__ . '/backend/server.js';
     if (file_exists($server_file)) {
         @exec("nohup node " . escapeshellarg($server_file) . " > /tmp/server.log 2>&1 &");
-        usleep(1500000); // Wait 1.5 seconds for Node server to start
-        $res = execute_proxy_curl_api($url, $incoming_headers);
+        for ($attempt = 0; $attempt < 10; $attempt++) {
+            usleep(400000); // Wait 400ms between attempts
+            $res = execute_proxy_curl_api($url, $incoming_headers);
+            if ($res['success']) {
+                break;
+            }
+        }
     }
 }
 

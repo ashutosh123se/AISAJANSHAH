@@ -67,7 +67,16 @@ export async function devLogin(email, password) {
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(data.error || 'Invalid email or password.');
+    if (data.error) {
+      throw new Error(data.error);
+    }
+    if (response.status === 404) {
+      throw new Error('API server route not found (404). Ensure backend is running on port 5000.');
+    }
+    if (response.status === 502 || response.status === 503) {
+      throw new Error('Backend server is starting or offline. Please start Node server on port 5000.');
+    }
+    throw new Error('Invalid email or password.');
   }
 
   const profile = normalizeProfile(data.user);

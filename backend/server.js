@@ -9,12 +9,32 @@ const openAIService = require('./services/openai');
 const emailService = require('./services/sendgrid');
 const localStore = require('./services/localStore');
 
+const rateLimit = require('express-rate-limit');
+
 /** App runs with server-backed JSON store — no Firebase. */
 
 const app = express();
 
+// Rate limiting to mitigate brute-force and DDoS attacks
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // Limit each IP to 10 login requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many login attempts. Please try again after 15 minutes.' },
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200, // Limit each IP to 200 API requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests from this IP, please try again later.' },
+});
+
+app.use('/api/', apiLimiter);
 app.use(cors());
-app.use(express.json({ limit: '50mb' }));
+app.use(express.json({ limit: '10mb' }));
 app.use(morgan('dev'));
 
 // Basic health check
@@ -23,7 +43,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Email/password login (server store — no Firebase)
-app.post('/api/auth/local-login', async (req, res) => {
+app.post('/api/auth/local-login', authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body || {};
     if (!email || password === undefined || password === null) {

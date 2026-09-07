@@ -343,54 +343,29 @@ function authenticateLocal(email, password) {
 
   const store = readStore();
 
-  // Check if it's admin login
-  if (normalized.includes('admin')) {
-    let adminUser = Object.values(store.users).find((u) => u.role === 'admin');
-    if (!adminUser) {
-      adminUser = defaultStore().users['local-admin-001'];
-      store.users['local-admin-001'] = adminUser;
-    }
-    adminUser.password = pass;
-    writeStore(store);
-    return toPublicProfile(adminUser);
-  }
-
-  // Find existing user (checking normalized email or aliases)
+  // Find existing user by exact email match or resolved email alias
   const resolvedEmail = resolveLoginEmail(normalized);
-  let user = Object.values(store.users).find(
+  const user = Object.values(store.users).find(
     (u) => u.email?.toLowerCase() === resolvedEmail || u.email?.toLowerCase() === normalized
   );
 
   if (!user) {
-    // Auto-create student account on the fly if it doesn't exist yet!
-    const newId = `local-student-${crypto.randomBytes(4).toString('hex')}`;
-    const namePart = rawEmail.split('@')[0] || 'Student';
-    user = {
-      id: newId,
-      email: rawEmail,
-      name: namePart.charAt(0).toUpperCase() + namePart.slice(1),
-      phone: '',
-      workshop: 'Memory Workshop',
-      role: 'student',
-      status: 'active',
-      password: pass,
-      onboardingComplete: true,
-      onboardingCompleted: true,
-      xp: 120,
-      level: 3,
-      createdAt: new Date().toISOString(),
-    };
-    store.users[newId] = user;
-    writeStore(store);
-  } else {
-    // Update password to whatever password they entered so it always matches
-    user.password = pass;
-    user.status = 'active';
-    if (!user.onboardingComplete) {
-      user.onboardingComplete = true;
-      user.onboardingCompleted = true;
-    }
-    writeStore(store);
+    const err = new Error('Invalid email or password.');
+    err.code = 'invalid-credentials';
+    throw err;
+  }
+
+  if (user.status === 'inactive') {
+    const err = new Error('Account is inactive. Please contact support.');
+    err.code = 'inactive';
+    throw err;
+  }
+
+  // Strict password check
+  if (user.password !== pass) {
+    const err = new Error('Invalid email or password.');
+    err.code = 'invalid-credentials';
+    throw err;
   }
 
   return toPublicProfile(user);
