@@ -12,13 +12,16 @@ import {
   TrendingUp, 
   UserCircle,
   LogOut,
-  Sparkles
+  Sparkles,
+  KeyRound
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import ChangePasswordModal from '../auth/ChangePasswordModal';
 
 const StudentSidebar = () => {
   const { logout, userProfile } = useAuth();
   const navigate = useNavigate();
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -61,7 +64,7 @@ const StudentSidebar = () => {
 
       {/* User Info (Mini) */}
       {userProfile && (
-        <div className="px-6 mb-8 shrink-0">
+        <div className="px-6 mb-6 shrink-0">
           <div 
             onClick={() => navigate('/student/profile')}
             className="bg-[var(--color-bg)] rounded-lg p-4 border border-[var(--color-border)] flex items-center gap-3 hover:border-[var(--color-primary)] transition-colors cursor-pointer"
@@ -69,11 +72,18 @@ const StudentSidebar = () => {
             <div className="w-10 h-10 rounded-full bg-white border border-[var(--color-border)] flex items-center justify-center text-[var(--color-primary)] font-serif font-bold text-lg">
               {userProfile.name ? userProfile.name.charAt(0).toUpperCase() : 'S'}
             </div>
-            <div className="overflow-hidden">
+            <div className="overflow-hidden flex-1">
               <p className="text-sm font-sans font-bold text-[var(--color-primary)] truncate">{userProfile.name || 'Student'}</p>
               <p className="text-xs font-sans text-[var(--color-text-secondary)] truncate mt-0.5">{userProfile.email}</p>
             </div>
           </div>
+          <button
+            onClick={() => setIsPasswordModalOpen(true)}
+            className="w-full mt-2 py-1.5 px-3 rounded-md text-xs font-sans font-semibold text-[var(--color-accent)] hover:bg-orange-50 border border-orange-200/60 transition-colors flex items-center justify-center gap-1.5"
+          >
+            <KeyRound className="w-3.5 h-3.5" />
+            Change Password
+          </button>
         </div>
       )}
 
@@ -144,6 +154,11 @@ const StudentSidebar = () => {
           Log Out
         </button>
       </div>
+
+      <ChangePasswordModal 
+        isOpen={isPasswordModalOpen} 
+        onClose={() => setIsPasswordModalOpen(false)} 
+      />
     </div>
   );
 };

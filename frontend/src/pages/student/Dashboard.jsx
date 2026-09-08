@@ -1,17 +1,38 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { MessageSquareText, Target, Brain, TrendingUp, ArrowRight, Sparkles } from 'lucide-react';
+import { MessageSquareText, Target, Brain, TrendingUp, ArrowRight, Sparkles, KeyRound, Lock, UserCircle } from 'lucide-react';
 import Button from '../../components/ui/Button';
+import ChangePasswordModal from '../../components/auth/ChangePasswordModal';
+import Toast, { ToastContainer } from '../../components/ui/Toast';
 
 const Dashboard = () => {
   const { userProfile } = useAuth();
   const navigate = useNavigate();
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [toasts, setToasts] = useState([]);
+
+  const addToast = (message, type = 'success') => {
+    const id = Date.now();
+    setToasts(prev => [...prev, { id, message, type }]);
+  };
+
+  const removeToast = (id) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  };
 
   const firstName = userProfile?.name ? userProfile.name.split(' ')[0] : 'Student';
 
   return (
     <div className="flex flex-col gap-8 pb-10">
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
+      
+      <ChangePasswordModal 
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+        onSuccess={() => addToast('Password successfully updated!', 'success')}
+      />
+
       {/* Welcome Banner */}
       <div className="relative overflow-hidden card p-8 lg:p-12">
         <div className="relative z-10 max-w-3xl">
@@ -42,23 +63,30 @@ const Dashboard = () => {
               <Target className="w-5 h-5 mr-2" />
               View Objectives
             </button>
+            <button 
+              className="px-6 h-[46px] rounded-full border border-orange-200 bg-orange-50 text-[var(--color-accent)] font-semibold text-[15px] font-sans hover:bg-orange-100 transition-all flex items-center justify-center gap-2"
+              onClick={() => setIsPasswordModalOpen(true)}
+            >
+              <KeyRound className="w-4 h-4" />
+              Change Password
+            </button>
           </div>
         </div>
       </div>
 
       {/* Widgets */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Widget 1 */}
         <div className="card p-8 flex flex-col">
           <div className="w-12 h-12 flex items-center justify-center mb-6">
             <Target className="w-6 h-6 text-[var(--color-primary)]" />
           </div>
           <h3 className="text-2xl font-serif font-bold text-[var(--color-primary)] mb-3">Active Targets</h3>
-          <p className="text-[var(--color-text-secondary)] font-sans text-sm mb-8 leading-relaxed flex-1">2 optimization goals currently in progress. Consistency is generating momentum.</p>
+          <p className="text-[var(--color-text-secondary)] font-sans text-sm mb-8 leading-relaxed flex-1">90-day optimization goals currently in progress.</p>
           
           <button 
             onClick={() => navigate('/student/goals')}
-            className="w-full py-3 border border-[var(--color-border)] text-[var(--color-primary)] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[var(--color-bg)] transition-colors"
+            className="w-full py-3 border border-[var(--color-border)] text-[var(--color-primary)] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[var(--color-bg)] transition-colors rounded-lg"
           >
             Manage Timeline <ArrowRight className="w-4 h-4" />
           </button>
@@ -70,11 +98,11 @@ const Dashboard = () => {
             <Brain className="w-6 h-6 text-[var(--color-primary)]" />
           </div>
           <h3 className="text-2xl font-serif font-bold text-[var(--color-primary)] mb-3">Neural Training</h3>
-          <p className="text-[var(--color-text-secondary)] font-sans text-sm mb-8 leading-relaxed flex-1">Daily cognitive enhancement exercises formulated by your AI.</p>
+          <p className="text-[var(--color-text-secondary)] font-sans text-sm mb-8 leading-relaxed flex-1">Daily cognitive enhancement exercises formulated by AI.</p>
           
           <button 
             onClick={() => navigate('/student/neuroscience')}
-            className="w-full py-3 border border-[var(--color-border)] text-[var(--color-primary)] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[var(--color-bg)] transition-colors"
+            className="w-full py-3 border border-[var(--color-border)] text-[var(--color-primary)] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[var(--color-bg)] transition-colors rounded-lg"
           >
             Initiate Sequence <ArrowRight className="w-4 h-4" />
           </button>
@@ -86,13 +114,29 @@ const Dashboard = () => {
             <TrendingUp className="w-6 h-6 text-[var(--color-primary)]" />
           </div>
           <h3 className="text-2xl font-serif font-bold text-[var(--color-primary)] mb-3">Analytics</h3>
-          <p className="text-[var(--color-text-secondary)] font-sans text-sm mb-8 leading-relaxed flex-1">Performance telemetry and progression metrics across all active vectors.</p>
+          <p className="text-[var(--color-text-secondary)] font-sans text-sm mb-8 leading-relaxed flex-1">Performance telemetry and progression metrics.</p>
           
           <button 
             onClick={() => navigate('/student/progress')}
-            className="w-full py-3 border border-[var(--color-border)] text-[var(--color-primary)] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[var(--color-bg)] transition-colors"
+            className="w-full py-3 border border-[var(--color-border)] text-[var(--color-primary)] font-semibold text-sm flex items-center justify-center gap-2 hover:bg-[var(--color-bg)] transition-colors rounded-lg"
           >
             Access Telemetry <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Widget 4 - Password & Security */}
+        <div className="card p-8 flex flex-col border border-orange-200 bg-orange-50/40">
+          <div className="w-12 h-12 flex items-center justify-center mb-6 bg-orange-100 text-[var(--color-accent)] rounded-full">
+            <KeyRound className="w-6 h-6" />
+          </div>
+          <h3 className="text-2xl font-serif font-bold text-[var(--color-primary)] mb-3">Account Security</h3>
+          <p className="text-[var(--color-text-secondary)] font-sans text-sm mb-8 leading-relaxed flex-1">Update your login password and manage credentials.</p>
+          
+          <button 
+            onClick={() => setIsPasswordModalOpen(true)}
+            className="w-full py-3 bg-[var(--color-primary)] text-white font-semibold text-sm flex items-center justify-center gap-2 hover:opacity-90 transition-opacity rounded-lg"
+          >
+            <Lock className="w-4 h-4" /> Change Password
           </button>
         </div>
       </div>
