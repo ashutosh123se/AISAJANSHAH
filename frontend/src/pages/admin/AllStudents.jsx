@@ -18,6 +18,7 @@ const emptyEdit = {
   phone: '',
   workshop: 'Memory Workshop',
   status: 'active',
+  password: '',
 };
 
 const AllStudents = () => {
@@ -58,6 +59,7 @@ const AllStudents = () => {
       phone: student.phone || '',
       workshop: student.workshop || 'Memory Workshop',
       status: student.status || 'active',
+      password: '',
     });
   };
 
@@ -81,15 +83,20 @@ const AllStudents = () => {
     setEditError('');
 
     try {
+      const payload = {
+        name: editForm.name,
+        email: editForm.email,
+        phone: editForm.phone,
+        workshop: editForm.workshop,
+        status: editForm.status,
+      };
+      if (editForm.password && editForm.password.trim()) {
+        payload.password = editForm.password.trim();
+      }
+
       const response = await apiFetch(`/api/admin/students/${editing}`, {
         method: 'PUT',
-        body: JSON.stringify({
-          name: editForm.name,
-          email: editForm.email,
-          phone: editForm.phone,
-          workshop: editForm.workshop,
-          status: editForm.status,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
@@ -337,6 +344,20 @@ const AllStudents = () => {
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-sans font-bold text-[var(--color-text-secondary)] mb-2 uppercase tracking-widest">
+                  Reset Password (Leave blank to keep unchanged)
+                </label>
+                <input
+                  type="text"
+                  name="password"
+                  value={editForm.password}
+                  onChange={handleEditChange}
+                  placeholder="Enter new password (e.g. Taniya@123)"
+                  className="w-full bg-white border border-[var(--color-border)] rounded-lg py-3 px-4 text-[15px] text-[var(--color-primary)] focus:outline-none focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)] font-mono text-sm"
+                />
               </div>
 
               {editError && (

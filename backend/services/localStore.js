@@ -213,11 +213,13 @@ function updateStudent(id, updates) {
     phone: updates.phone !== undefined ? updates.phone : existing.phone,
     workshop: updates.workshop !== undefined ? updates.workshop : existing.workshop,
     status: updates.status !== undefined ? updates.status : existing.status,
+    password: updates.password && String(updates.password).trim() ? String(updates.password).trim() : existing.password,
     updatedAt: new Date().toISOString(),
   };
 
   writeStore(store);
-  return { ...store.users[id] };
+  const { password, ...safe } = store.users[id];
+  return { ...safe };
 }
 
 async function bulkCreate(students) {

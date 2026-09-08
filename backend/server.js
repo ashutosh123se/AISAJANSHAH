@@ -463,14 +463,14 @@ app.delete('/api/admin/students/:id', verifyToken, adminOnly, async (req, res) =
 app.put('/api/admin/students/:id', verifyToken, adminOnly, async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, phone, workshop, status } = req.body;
+    const { name, email, phone, workshop, status, password } = req.body;
 
     if (!name || !email) {
       return res.status(400).json({ error: 'Name and email are required' });
     }
 
     try {
-      const updated = localStore.updateStudent(id, { name, email, phone, workshop, status });
+      const updated = localStore.updateStudent(id, { name, email, phone, workshop, status, password });
       return res.status(200).json({ message: 'Student updated successfully', student: updated });
     } catch (err) {
       if (err.code === 'not-found') {
