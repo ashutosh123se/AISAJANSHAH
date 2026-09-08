@@ -3,7 +3,7 @@ module.exports = {
     {
       name: 'aisajanshah-backend',
       script: 'backend/server.js',
-      cwd: '/home/master/applications/jpkbjeavpe/public_html',
+      cwd: __dirname,
       env: {
         PORT: 5000,
         NODE_ENV: 'production',
