@@ -16,13 +16,20 @@ $ch = curl_init($url);
 
 // Forward request headers
 $incoming_headers = [];
+$has_forwarded_for = false;
 if (function_exists('getallheaders')) {
     $headers = getallheaders();
     foreach ($headers as $name => $value) {
+        if (strtolower($name) === 'x-forwarded-for') {
+            $has_forwarded_for = true;
+        }
         if (strtolower($name) !== 'host' && strtolower($name) !== 'content-length') {
             $incoming_headers[] = "$name: $value";
         }
     }
+}
+if (!$has_forwarded_for && !empty($_SERVER['REMOTE_ADDR'])) {
+    $incoming_headers[] = "X-Forwarded-For: " . $_SERVER['REMOTE_ADDR'];
 }
 
 function execute_proxy_curl_api($url, $incoming_headers) {
@@ -39,11 +46,16 @@ function execute_proxy_curl_api($url, $incoming_headers) {
 
     curl_setopt($ch, CURLOPT_HEADERFUNCTION, function($curl, $header) {
         $len = strlen($header);
+        $trimmed = trim($header);
+        if (stripos($trimmed, 'HTTP/') === 0) {
+            header($trimmed);
+            return $len;
+        }
         $parts = explode(':', $header, 2);
         if (count($parts) === 2) {
             $name = strtolower(trim($parts[0]));
             if (!in_array($name, ['transfer-encoding', 'content-length', 'connection'])) {
-                header(trim($header));
+                header($trimmed);
             }
         }
         return $len;

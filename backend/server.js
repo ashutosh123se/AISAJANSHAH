@@ -14,11 +14,12 @@ const rateLimit = require('express-rate-limit');
 /** App runs with server-backed JSON store — no Firebase. */
 
 const app = express();
+app.set('trust proxy', 1);
 
 // Rate limiting to mitigate brute-force and DDoS attacks
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // Limit each IP to 10 login requests per windowMs
+  max: 100, // Limit each IP to 100 login requests per windowMs
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many login attempts. Please try again after 15 minutes.' },
@@ -26,7 +27,7 @@ const authLimiter = rateLimit({
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200, // Limit each IP to 200 API requests per windowMs
+  max: 1000, // Limit each IP to 1000 API requests per windowMs
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests from this IP, please try again later.' },
