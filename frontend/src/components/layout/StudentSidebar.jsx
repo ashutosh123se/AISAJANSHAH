@@ -62,7 +62,10 @@ const StudentSidebar = () => {
       {/* User Info (Mini) */}
       {userProfile && (
         <div className="px-6 mb-8 shrink-0">
-          <div className="bg-[var(--color-bg)] rounded-lg p-4 border border-[var(--color-border)] flex items-center gap-3 hover:border-[var(--color-primary)] transition-colors cursor-pointer">
+          <div 
+            onClick={() => navigate('/student/profile')}
+            className="bg-[var(--color-bg)] rounded-lg p-4 border border-[var(--color-border)] flex items-center gap-3 hover:border-[var(--color-primary)] transition-colors cursor-pointer"
+          >
             <div className="w-10 h-10 rounded-full bg-white border border-[var(--color-border)] flex items-center justify-center text-[var(--color-primary)] font-serif font-bold text-lg">
               {userProfile.name ? userProfile.name.charAt(0).toUpperCase() : 'S'}
             </div>
