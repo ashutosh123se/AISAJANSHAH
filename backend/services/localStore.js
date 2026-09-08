@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const mailer = require('./mailer');
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const STORE_PATH = path.join(DATA_DIR, 'local-store.json');
@@ -159,7 +160,7 @@ function getStats() {
   };
 }
 
-function createStudent({ email, password, name, phone, workshop, sendEmail }) {
+async function createStudent({ email, password, name, phone, workshop, sendEmail }) {
   const store = readStore();
   const exists = Object.values(store.users).some(
     (u) => u.email?.toLowerCase() === email.toLowerCase()
@@ -179,7 +180,7 @@ function createStudent({ email, password, name, phone, workshop, sendEmail }) {
     workshop: workshop || '',
     role: 'student',
     status: 'active',
-    password, // dig-only, not for production Firebase path
+    password,
     createdAt: new Date().toISOString(),
     onboardingComplete: false,
     onboardingCompleted: false,
@@ -189,17 +190,31 @@ function createStudent({ email, password, name, phone, workshop, sendEmail }) {
 
   let emailStatus = 'skipped';
   if (sendEmail) {
-    // Dig mode has no SendGrid — mail is not actually delivered
-    emailStatus = 'not_delivered';
-    store.emailLogs.unshift({
-      id: `log-${Date.now()}`,
-      to: email,
-      type: 'welcome',
-      subject: 'Welcome to AI Sajan Shah',
-      sentAt: new Date().toISOString(),
-      status: 'not_delivered',
-      note: 'Email not sent — SendGrid is not configured in dig mode',
-    });
+    try {
+      await mailer.sendWelcomeEmail(email, name, password);
+      emailStatus = 'sent';
+      store.emailLogs.unshift({
+        id: `log-${Date.now()}`,
+        to: email,
+        type: 'welcome',
+        subject: 'Welcome to AI Sajan Shah - Your Account Credentials',
+        sentAt: new Date().toISOString(),
+        status: 'sent',
+        note: 'Delivered via Gmail SMTP (team.sajanshah@gmail.com)',
+      });
+    } catch (sendErr) {
+      console.error(`Email send failed for ${email}:`, sendErr.message);
+      emailStatus = 'failed';
+      store.emailLogs.unshift({
+        id: `log-${Date.now()}`,
+        to: email,
+        type: 'welcome',
+        subject: 'Welcome to AI Sajan Shah - Your Account Credentials',
+        sentAt: new Date().toISOString(),
+        status: 'failed',
+        note: `Email delivery failed: ${sendErr.message}`,
+      });
+    }
   }
 
   writeStore(store);
@@ -256,7 +271,7 @@ function updateStudent(id, updates) {
   return { ...store.users[id] };
 }
 
-function bulkCreate(students) {
+async function bulkCreate(students) {
   const results = { successful: 0, failed: 0, errors: [] };
   for (const student of students) {
     try {
@@ -264,7 +279,7 @@ function bulkCreate(students) {
         throw new Error('name and email are required');
       }
       const password = Math.random().toString(36).slice(-8) + 'A1!';
-      createStudent({
+      await createStudent({
         email: student.email,
         name: student.name,
         phone: student.phone || '',

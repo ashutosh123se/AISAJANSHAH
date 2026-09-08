@@ -185,7 +185,7 @@ const AddStudent = () => {
                 Send Welcome Email
               </label>
               <p className="text-[14px] font-sans text-[var(--color-text-secondary)] mt-1 leading-relaxed">
-                This will automatically send an email via SendGrid to the student containing their login credentials and a link to the portal.
+                This will automatically send an email from team.sajanshah@gmail.com directly to the student containing their unique login credentials.
               </p>
             </div>
           </div>
