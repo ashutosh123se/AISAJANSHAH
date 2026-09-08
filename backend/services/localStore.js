@@ -33,16 +33,21 @@ function ensureAdminAccount(store) {
     changed = true;
   }
 
-  // Deduplicate users by email (keep only the newest record per email)
+  // Deduplicate users by email and clean whitespace
   const seenEmails = new Map();
   for (const [id, user] of Object.entries(store.users)) {
-    const email = (user.email || '').toLowerCase().trim();
-    if (!email) continue;
-    if (seenEmails.has(email)) {
+    const raw = (user.email || '').trim();
+    if (!raw) continue;
+    if (user.email !== raw) {
+      user.email = raw;
+      changed = true;
+    }
+    const emailKey = raw.toLowerCase();
+    if (seenEmails.has(emailKey)) {
       delete store.users[id];
       changed = true;
     } else {
-      seenEmails.set(email, id);
+      seenEmails.set(emailKey, id);
     }
   }
 
@@ -302,7 +307,7 @@ function authenticateLocal(email, password) {
   const store = readStore();
 
   const user = Object.values(store.users).find(
-    (u) => u.email?.toLowerCase() === normalized
+    (u) => (u.email || '').trim().toLowerCase() === normalized
   );
 
   if (!user) {
@@ -318,7 +323,7 @@ function authenticateLocal(email, password) {
   }
 
   // Strict password check
-  if (user.password !== pass) {
+  if (String(user.password || '').trim() !== pass) {
     const err = new Error('Invalid email or password.');
     err.code = 'invalid-credentials';
     throw err;
