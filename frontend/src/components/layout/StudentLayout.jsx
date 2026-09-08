@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import StudentSidebar from './StudentSidebar';
-import { Menu, Bell } from 'lucide-react';
+import { Menu, Bell, Sparkles } from 'lucide-react';
 
 const StudentLayout = () => {
   const location = useLocation();
@@ -25,7 +25,7 @@ const StudentLayout = () => {
             <button className="p-2 -ml-2 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg)] transition-colors">
               <Menu className="w-[22px] h-[22px]" />
             </button>
-            <img src="/favicon.png" alt="Sajan Shah Logo" className="w-7 h-7 object-contain shrink-0" />
+            <Sparkles className="w-6 h-6 text-[var(--color-accent)] shrink-0" />
             <span className="font-serif font-bold text-xl text-[var(--color-primary)]">AI Sajan Shah</span>
           </div>
           <button className="p-2 rounded-full text-[var(--color-text-secondary)] hover:bg-[var(--color-bg)] relative transition-colors">
