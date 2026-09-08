@@ -511,6 +511,29 @@ app.post('/api/student/activity', verifyToken, async (req, res) => {
   }
 });
 
+// --- CHANGE PASSWORD ENDPOINT ---
+app.post('/api/student/change-password', verifyToken, async (req, res) => {
+  try {
+    const uid = req.user?.uid;
+    const { currentPassword, newPassword } = req.body || {};
+
+    if (!uid) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    try {
+      const result = localStore.changePassword(uid, currentPassword, newPassword);
+      return res.status(200).json(result);
+    } catch (err) {
+      const status = err.code === 'not-found' ? 404 : 400;
+      return res.status(status).json({ error: err.message });
+    }
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({ error: 'Failed to update password' });
+  }
+});
+
 // Serve static frontend files from parent directory (web root) and dist
 const fs = require('fs');
 const path = require('path');

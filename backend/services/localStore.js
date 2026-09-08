@@ -377,6 +377,38 @@ function updateScore(uid, xpGained) {
   return { xp: newXp, level: newLevel, goalTrajectory: currentTrajectory };
 }
 
+function changePassword(uid, currentPassword, newPassword) {
+  const store = readStore();
+  const user = store.users[uid];
+  if (!user) {
+    const err = new Error('User account not found');
+    err.code = 'not-found';
+    throw err;
+  }
+
+  const cleanCurrent = String(currentPassword || '').trim();
+  const cleanNew = String(newPassword || '').trim();
+
+  if (!cleanNew || cleanNew.length < 6) {
+    const err = new Error('New password must be at least 6 characters long');
+    err.code = 'invalid-password';
+    throw err;
+  }
+
+  // If user already has a password set, verify the current password
+  if (user.password && user.password !== cleanCurrent) {
+    const err = new Error('Current password does not match');
+    err.code = 'incorrect-password';
+    throw err;
+  }
+
+  user.password = cleanNew;
+  user.updatedAt = new Date().toISOString();
+  writeStore(store);
+
+  return { message: 'Password updated successfully' };
+}
+
 module.exports = {
   listStudents,
   getUser,
@@ -390,5 +422,7 @@ module.exports = {
   authenticateLocal,
   completeOnboarding,
   updateScore,
+  changePassword,
 };
+
 

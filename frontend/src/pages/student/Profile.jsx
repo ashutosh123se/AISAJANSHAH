@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { User, Bell, Shield, Globe, Save, Trophy, Flame, Target, Activity } from 'lucide-react';
+import { User, Bell, Shield, Globe, Save, Trophy, Flame, Target, Activity, Lock, KeyRound } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { useAuth } from '../../hooks/useAuth';
 import Input from '../../components/ui/Input';
 import { ToastContainer } from '../../components/ui/Toast';
+import { apiFetch } from '../../utils/api';
 
 const Profile = () => {
   const { userProfile, setUserProfile } = useAuth();
@@ -14,6 +15,13 @@ const Profile = () => {
     phone: userProfile?.phone || '',
     language: userProfile?.onboardingData?.language || 'hinglish',
   });
+
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   
   const [isSaving, setIsSaving] = useState(false);
   const [toasts, setToasts] = useState([]);
@@ -32,6 +40,11 @@ const Profile = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handlePasswordInputChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData(prev => ({ ...prev, [name]: value }));
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
@@ -47,10 +60,8 @@ const Profile = () => {
 
       setUserProfile(updatedProfile);
 
-      const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
-      await fetch(`${API_BASE}/api/student/onboarding`, {
+      await apiFetch('/api/student/onboarding', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: formData.name,
           phone: formData.phone,
@@ -63,6 +74,49 @@ const Profile = () => {
       addToast('Failed to update profile', 'error');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleUpdatePassword = async (e) => {
+    e.preventDefault();
+    if (!passwordData.newPassword) {
+      addToast('Please enter a new password', 'error');
+      return;
+    }
+    if (passwordData.newPassword.length < 6) {
+      addToast('New password must be at least 6 characters', 'error');
+      return;
+    }
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      addToast('New passwords do not match', 'error');
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      const response = await apiFetch('/api/student/change-password', {
+        method: 'POST',
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update password');
+      }
+
+      addToast('Password updated successfully! Use your new password for future logins.', 'success');
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+    } catch (err) {
+      addToast(err.message, 'error');
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -100,7 +154,7 @@ const Profile = () => {
           My Profile & Progress.
         </h2>
         <p className="text-[16px] font-sans text-[var(--color-text-secondary)] max-w-2xl">
-          Manage your personal information and monitor your continuous optimization.
+          Manage your personal information, account security, and monitor your continuous optimization.
         </p>
       </div>
 
@@ -154,6 +208,80 @@ const Profile = () => {
                 <input type="text" name="phone" value={formData.phone} onChange={handleChange} className="w-full h-12 px-4 rounded-lg border border-[var(--color-border)] bg-transparent focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] transition-all outline-none font-sans text-sm text-[var(--color-primary)]" />
               </div>
             </div>
+          </div>
+
+          {/* Password & Security Section */}
+          <div className="rounded-2xl p-10 bg-white border border-[var(--color-border)] shadow-sm relative overflow-hidden">
+            <div className="flex items-center gap-3 mb-8 relative z-10">
+              <div className="w-10 h-10 rounded-full bg-[var(--color-bg)] border border-[var(--color-border)] flex items-center justify-center">
+                <KeyRound className="w-5 h-5 text-[var(--color-primary)]" />
+              </div>
+              <div>
+                <h3 className="text-xl font-serif font-bold text-[var(--color-primary)]">
+                  Account Security & Password
+                </h3>
+                <p className="text-xs font-sans text-[var(--color-text-secondary)] mt-0.5">
+                  Update your login password to secure your account.
+                </p>
+              </div>
+            </div>
+            
+            <form onSubmit={handleUpdatePassword} className="flex flex-col gap-6 relative z-10">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-xs font-sans font-bold text-[var(--color-text-secondary)] uppercase tracking-wider mb-2">
+                    Current Password
+                  </label>
+                  <input
+                    type="password"
+                    name="currentPassword"
+                    placeholder="Enter current password"
+                    value={passwordData.currentPassword}
+                    onChange={handlePasswordInputChange}
+                    className="w-full h-12 px-4 rounded-lg border border-[var(--color-border)] bg-transparent focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] transition-all outline-none font-sans text-sm text-[var(--color-primary)]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-sans font-bold text-[var(--color-text-secondary)] uppercase tracking-wider mb-2">
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    name="newPassword"
+                    placeholder="Min 6 characters"
+                    value={passwordData.newPassword}
+                    onChange={handlePasswordInputChange}
+                    required
+                    className="w-full h-12 px-4 rounded-lg border border-[var(--color-border)] bg-transparent focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] transition-all outline-none font-sans text-sm text-[var(--color-primary)]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-sans font-bold text-[var(--color-text-secondary)] uppercase tracking-wider mb-2">
+                    Confirm Password
+                  </label>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    placeholder="Re-enter new password"
+                    value={passwordData.confirmPassword}
+                    onChange={handlePasswordInputChange}
+                    required
+                    className="w-full h-12 px-4 rounded-lg border border-[var(--color-border)] bg-transparent focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] transition-all outline-none font-sans text-sm text-[var(--color-primary)]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <button
+                  type="submit"
+                  disabled={isChangingPassword}
+                  className="btn-elegant px-6 flex items-center gap-2"
+                >
+                  <Lock className="w-4 h-4" />
+                  {isChangingPassword ? 'Updating Password...' : 'Change Password'}
+                </button>
+              </div>
+            </form>
           </div>
 
           <div className="rounded-2xl p-10 bg-white border border-[var(--color-border)] shadow-sm relative overflow-hidden">

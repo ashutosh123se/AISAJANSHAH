@@ -63,6 +63,7 @@ const sendWelcomeEmail = async (toEmail, name, tempPassword) => {
         
         <div style="background-color: #1E1E2E; border-left: 4px solid #FF6B35; padding: 20px; border-radius: 8px; margin: 28px 0;">
           <h3 style="margin-top: 0; color: #FF6B35; font-size: 18px;">🔒 Your Private Account Credentials</h3>
+          <p style="font-size: 14px; margin: 10px 0; color: #E5E7EB;"><strong>Portal URL:</strong> <a href="https://ai01.sajanshah.com" style="color: #60A5FA; text-decoration: underline;">https://ai01.sajanshah.com</a></p>
           <p style="font-size: 14px; margin: 10px 0; color: #E5E7EB;"><strong>Email:</strong> <span style="color: #60A5FA;">${cleanRecipient}</span></p>
           <p style="font-size: 14px; margin: 10px 0; color: #E5E7EB;"><strong>Password:</strong> <code style="background: #111827; padding: 6px 12px; border-radius: 6px; color: #10B981; font-family: monospace; font-size: 15px; border: 1px solid #374151;">${tempPassword}</code></p>
           <p style="font-size: 12px; color: #9CA3AF; margin-top: 14px; margin-bottom: 0; line-height: 1.4;">
@@ -71,7 +72,7 @@ const sendWelcomeEmail = async (toEmail, name, tempPassword) => {
         </div>
         
         <div style="text-align: center; margin: 32px 0;">
-          <a href="https://ai.sajanshah.com/login" style="display: inline-block; background-color: #FF6B35; color: #FFFFFF; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 14px rgba(255, 107, 53, 0.4);">Log in to Platform</a>
+          <a href="https://ai01.sajanshah.com/login" style="display: inline-block; background-color: #FF6B35; color: #FFFFFF; padding: 14px 28px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 14px rgba(255, 107, 53, 0.4);">Log in to Platform (ai01.sajanshah.com)</a>
         </div>
         
         <div style="border-top: 1px solid #2D2D3F; padding-top: 20px; margin-top: 32px; font-size: 13px; color: #9CA3AF; text-align: center;">
