@@ -70,19 +70,6 @@ function readStore() {
     return fresh;
   }
 }
-  ensureStore();
-  try {
-    const store = JSON.parse(fs.readFileSync(STORE_PATH, 'utf8'));
-    if (ensureDemoAccounts(store)) {
-      writeStore(store);
-    }
-    return store;
-  } catch {
-    const fresh = defaultStore();
-    writeStore(fresh);
-    return fresh;
-  }
-}
 
 function writeStore(store) {
   ensureStore();
