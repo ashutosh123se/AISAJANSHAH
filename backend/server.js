@@ -59,20 +59,36 @@ app.post('/api/auth/local-login', authLimiter, async (req, res) => {
 });
 
 // --- CHAT ENDPOINTS ---
-function detectLanguage(messages, userProfile) {
+function detectLanguage(messages, userProfile, uid) {
   const lastMsg = (messages[messages.length - 1]?.content || '').toLowerCase();
-  const pref = (userProfile?.onboardingData?.language || '').toLowerCase();
+  
+  // Resolve student's onboarding / profile language preference
+  let pref = (userProfile?.onboardingData?.language || '').toLowerCase().trim();
+  if (!pref && uid) {
+    const user = localStore.getUser(uid);
+    pref = (user?.onboardingData?.language || '').toLowerCase().trim();
+  }
+  if (!pref) pref = 'hinglish';
 
-  if (lastMsg.includes('gujarat') || lastMsg.includes('gujrat') || pref === 'gujarati') {
-    return 'gujarati';
+  // Check if student explicitly asks to switch language or translate in this prompt
+  if (/\b(in gujarati|gujarati ma|gujarati script|gujarati translate|translate to gujarati|ગુજરાતી)\b/i.test(lastMsg)) {
+    return { lang: 'gujarati', isExplicitRequest: true, defaultPref: pref };
   }
-  if (lastMsg.includes('hindi') || pref === 'hindi') {
-    return 'hindi';
+  if (/\b(in hindi|hindi me|hindi mein|hindi script|hindi translate|translate to hindi|हिंदी)\b/i.test(lastMsg)) {
+    return { lang: 'hindi', isExplicitRequest: true, defaultPref: pref };
   }
-  if (lastMsg.includes('english') || pref === 'english') {
-    return 'english';
+  if (/\b(in english|speak english|speak in english|english translate|translate to english|only english)\b/i.test(lastMsg)) {
+    return { lang: 'english', isExplicitRequest: true, defaultPref: pref };
   }
-  return 'hinglish';
+  if (/\b(in hinglish|speak hinglish|speak in hinglish|hinglish me|hinglish mein)\b/i.test(lastMsg)) {
+    return { lang: 'hinglish', isExplicitRequest: true, defaultPref: pref };
+  }
+
+  // Otherwise, strictly use the student's chosen onboarding language
+  if (pref === 'gujarati') return { lang: 'gujarati', isExplicitRequest: false, defaultPref: pref };
+  if (pref === 'hindi') return { lang: 'hindi', isExplicitRequest: false, defaultPref: pref };
+  if (pref === 'english') return { lang: 'english', isExplicitRequest: false, defaultPref: pref };
+  return { lang: 'hinglish', isExplicitRequest: false, defaultPref: pref };
 }
 
 app.post('/api/chat', verifyToken, async (req, res) => {
@@ -87,26 +103,40 @@ app.post('/api/chat', verifyToken, async (req, res) => {
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
-    const lang = detectLanguage(messages, userProfile);
+    const { lang, defaultPref } = detectLanguage(messages, userProfile, req.user?.uid);
 
     let systemPrompt = `You are Sajan Shah, India's Youngest Motivational Speaker, Memory Man of India, and Life Coach.
 Your tone is high-energy, encouraging, strict but loving, like an elder brother.
 Focus on actionable advice, memory techniques (Memory Palace, Peg system), and 90-day goal setting.
-Never provide medical advice. If a user expresses severe depression or self-harm, immediately provide the helpline numbers: iCall India (9152987821) and Vandrevala Foundation (1860-2662-345).`;
+Never provide medical advice. If a user expresses severe depression or self-harm, immediately provide the helpline numbers: iCall India (9152987821) and Vandrevala Foundation (1860-2662-345).
+
+CRITICAL LANGUAGE & TRANSLATION DIRECTIVES:
+1. The student's chosen language is: ${lang.toUpperCase()}.
+2. MULTILINGUAL UNDERSTANDING: The student may write their question in ANY language (English, Hindi, Gujarati, Hinglish, or mixed). You must seamlessly understand what they mean.
+3. DEFAULT OUTPUT: Always provide your entire response in ${lang.toUpperCase()} by default.
+4. TRANSLATION: If the student asks you to translate a concept, paragraph, or phrase, or asks to explain in a different language, translate accurately and present the explanation in the requested language.`;
 
     if (lang === 'gujarati') {
-      systemPrompt += `\n\nCRITICAL LANGUAGE MANDATE: The user requested GUJARATI. You MUST reply 100% in pure GUJARATI script (ગુજરાતી)! Do NOT use English, Hinglish, or Hindi script! All sentences must be written in full Gujarati script.`;
+      systemPrompt += `\n\nLANGUAGE MANDATE (GUJARATI):
+- You MUST reply 100% in pure GUJARATI script (ગુજરાતી)!
+- Do NOT use English script, Hinglish, or Hindi script for the explanation.
+- Use natural, energetic, inspiring Gujarati spoken by elder brother Sajan Shah (e.g., 'અરે ભાઈ!', 'ધ્યાનથી સાંભળો!').`;
     } else if (lang === 'hindi') {
-      systemPrompt += `\n\nCRITICAL LANGUAGE MANDATE: The user requested HINDI. You MUST reply 100% in pure HINDI script (Devanagari - हिंदी)!`;
+      systemPrompt += `\n\nLANGUAGE MANDATE (HINDI):
+- You MUST reply 100% in pure HINDI script (Devanagari - हिंदी)!
+- Use natural, high-energy Hindi spoken by Sajan Shah (e.g., 'अरे मेरे भाई!', 'ध्यान से सुनो!').`;
     } else if (lang === 'english') {
-      systemPrompt += `\n\nCRITICAL LANGUAGE MANDATE: Reply in clear, professional English.`;
+      systemPrompt += `\n\nLANGUAGE MANDATE (ENGLISH):
+- Reply in clear, inspiring, professional English with high energy and actionable advice.`;
     } else {
-      systemPrompt += `\n\nBy default, reply in a high-energy mix of Hindi and English (Hinglish). Use words like "Arre yaar", "Champ", "Dhyan se suno".`;
+      systemPrompt += `\n\nLANGUAGE MANDATE (HINGLISH):
+- Reply in a high-energy mix of Hindi and English (Hinglish). Use words like "Arre yaar", "Champ", "Dhyan se suno", "Let's crush this!".`;
     }
 
     if (userProfile) {
       systemPrompt += `\n\nContext about the student you are talking to:
 Name: ${userProfile.name || 'Student'}
+Preferred Language: ${defaultPref}
 Goal: ${userProfile.onboardingData?.goal90Day || 'Not specified'}
 Challenges: ${userProfile.onboardingData?.challenges?.join(', ') || 'Not specified'}`;
     }
@@ -135,6 +165,8 @@ Challenges: ${userProfile.onboardingData?.challenges?.join(', ') || 'Not specifi
         fallbackText = `અરે ${studentName}! ધ્યાનમાં રાખો! 🌟\n\nતમે પૂછ્યું: "${lastMsg}"\n\nએક વાત હંમેશા યાદ રાખો: સફળતા એક દિવસમાં મળતી નથી, પરંતુ દરરોજની સખત મહેનતથી ચોક્કસ મળે છે! Overthinking બંધ કરો, તમારા ૯૦ દિવસના લક્ષ્યો પર ધ્યાન આપો અને દરરોજ મહેનત કરો! 💥\n\nતમારી સૌથી મોટી તાકાત તમારો માઇન્ડસેટ છે. કોઈ પણ સમસ્યા હોય, હું હંમેશાં તમારા મોટા ભાઈ તરીકે તમારી સાથે છું! ચાલો આજે કઈક અદભુત કરીએ! 🔥`;
       } else if (lang === 'hindi') {
         fallbackText = `अरे ${studentName}! ध्यान से सुनो! 🌟\n\nआपने पूछा: "${lastMsg}"\n\nएक बात हमेशा याद रखो: सफलता एक दिन में नहीं मिलती, लेकिन हर रोज़ की कड़ी मेहनत से ज़रूर मिलती है! Overthinking बंद करो, अपने 90-दिन के लक्ष्यों पर ध्यान दो और रोज़ काम करो! 💥\n\nआपकी सबसे बड़ी ताकत आपका माइंडसेट है। कोई भी समस्या हो, मैं हमेशा आपके बड़े भाई के रूप में आपके साथ हूँ! चलिए आज कमाल करते हैं! 🔥`;
+      } else if (lang === 'english') {
+        fallbackText = `Hey ${studentName}! Listen closely! 🌟\n\nYou asked: "${lastMsg}"\n\nAlways remember: Success is not built in a single day, but through consistent daily action and discipline! Stop overthinking, focus on your 90-day goals, and execute every day! 💥\n\nYour greatest strength is your mindset. Whatever challenges you face, I am always here as your mentor. Let's achieve greatness today! 🔥`;
       } else {
         fallbackText = `Arre ${studentName}! Dhyan se suno! 🌟\n\nTumne bola: "${lastMsg}"\n\nEk baat hamesha yaad rakhna: Success ek din me nahi milti, lekin har roz ki mehnat se zaroor milti hai! Stop overthinking, focus on your goals, and execute daily! 💥\n\nTumhaari sabse badi strength tumhaara mindset hai. Kuch bhi problem ho, I am always here with you as your mentor and elder brother! Let's crush your goals today! 🔥`;
       }
