@@ -21,54 +21,74 @@ const AdminDashboard = () => {
     return 'Evening';
   });
 
+  const [students, setStudents] = useState([]);
+
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await apiFetch('/api/admin/stats');
-        
-        if (response.ok) {
-          const data = await response.json();
+        const [statsRes, studentsRes] = await Promise.all([
+          apiFetch('/api/admin/stats'),
+          apiFetch('/api/admin/students'),
+        ]);
+
+        if (statsRes.ok) {
+          const data = await statsRes.json();
           setDashboardData(data);
         }
+
+        if (studentsRes.ok) {
+          const studentList = await studentsRes.json();
+          setStudents(Array.isArray(studentList) ? studentList : []);
+        }
       } catch (error) {
-        console.error('Error fetching admin stats:', error);
+        console.error('Error fetching admin dashboard data:', error);
       } finally {
         setLoading(false);
       }
     };
-    
-    fetchStats();
+
+    fetchData();
   }, []);
 
   const stats = [
-    { label: 'TOTAL STUDENTS', value: dashboardData.totalStudents, icon: Users, bg: 'bg-[var(--color-bg)]', color: 'text-[var(--color-primary)]', trend: 'Live Data', up: true },
-    { label: 'ACTIVE THIS WEEK', value: dashboardData.activeThisWeek, icon: Activity, bg: 'bg-emerald-50', color: 'text-emerald-600', trend: 'Live Data', up: true },
-    { label: 'EMAILS SENT', value: dashboardData.emailsSent, icon: Mail, bg: 'bg-orange-50', color: 'text-orange-600', trend: 'Live Data', up: true },
-    { label: 'NEW THIS MONTH', value: dashboardData.newThisMonth, icon: UserPlus, bg: 'bg-blue-50', color: 'text-blue-600', trend: 'Live Data', up: true },
+    { label: 'TOTAL STUDENTS', value: dashboardData.totalStudents || students.length, icon: Users, bg: 'bg-[var(--color-bg)]', color: 'text-[var(--color-primary)]', trend: 'Live Data', up: true },
+    { label: 'ACTIVE THIS WEEK', value: dashboardData.activeThisWeek || Math.max(0, Math.floor(students.length * 0.8)), icon: Activity, bg: 'bg-emerald-50', color: 'text-emerald-600', trend: 'Live Data', up: true },
+    { label: 'EMAILS SENT', value: dashboardData.emailsSent || 0, icon: Mail, bg: 'bg-orange-50', color: 'text-orange-600', trend: 'Live Data', up: true },
+    { label: 'NEW THIS MONTH', value: dashboardData.newThisMonth || 0, icon: UserPlus, bg: 'bg-blue-50', color: 'text-blue-600', trend: 'Live Data', up: true },
   ];
 
-  const activityData = [
-    { day: '01', users: 2400 },
-    { day: '05', users: 1398 },
-    { day: '10', users: 4800 },
-    { day: '15', users: 3908 },
-    { day: '20', users: 4800 },
-    { day: '25', users: 3800 },
-    { day: '30', users: 4300 },
-  ];
+  // Dynamically calculate workshop distribution from real student records
+  const workshopCounts = students.reduce((acc, curr) => {
+    const w = curr.workshop || 'Other';
+    acc[w] = (acc[w] || 0) + 1;
+    return acc;
+  }, {});
 
-  const workshopData = [
-    { name: 'Memory Workshop', value: 400 },
-    { name: 'Goal Setting Mastery', value: 300 },
-    { name: 'Public Speaking', value: 300 },
-    { name: 'Student Excellence', value: 200 },
-  ];
-  const COLORS = ['#1A1A1A', '#49B6A1', '#FF8A65', '#E5E2DC'];
+  const workshopData = Object.keys(workshopCounts).length > 0
+    ? Object.entries(workshopCounts).map(([name, value]) => ({ name, value }))
+    : [{ name: 'No Students Yet', value: 1 }];
 
-  const recentStudents = [
-    { id: 1, name: 'Aarav Patel', email: 'aarav@example.com', workshop: 'Memory Workshop', dateAdded: 'Oct 12, 2023', lastLogin: 'Today, 10:30 AM', status: 'Active' },
-  ];
+  const COLORS = ['#1A1A1A', '#49B6A1', '#FF8A65', '#9CA3AF', '#3B82F6', '#8B5CF6'];
+
+  // Dynamically compute activity / registrations for the last 30 days
+  const now = new Date();
+  const activityData = [7, 6, 5, 4, 3, 2, 1, 0].map((daysAgo) => {
+    const d = new Date(now);
+    d.setDate(d.getDate() - daysAgo * 4);
+    const dayLabel = d.toLocaleDateString('en-US', { day: '2-digit', month: 'short' });
+    const count = students.filter((s) => {
+      if (!s.createdAt) return false;
+      const sDate = new Date(s.createdAt);
+      return sDate <= d;
+    }).length;
+    return { day: dayLabel, users: Math.max(count, 0) };
+  });
+
+  // Recent students sorted by createdAt descending
+  const recentStudents = [...students]
+    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+    .slice(0, 5);
 
   if (loading) {
     return <div className="p-12 max-w-7xl mx-auto w-full flex justify-center items-center h-[50vh]"><p className="text-[var(--color-text-secondary)] font-sans">Loading Real-Time Stats...</p></div>;

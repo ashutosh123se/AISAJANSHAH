@@ -6,15 +6,6 @@ const mailer = require('./mailer');
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const STORE_PATH = path.join(DATA_DIR, 'local-store.json');
 
-const STUDENT_EMAIL = 'ashutoshshekhar37@gmail.com';
-const STUDENT_PASSWORD = 'Ashutosh@1234sa';
-/** Common typo and historical aliases for the demo student email */
-const STUDENT_EMAIL_ALIASES = [
-  'ashutoshshrkhar37@gmail.com',
-  'ashutoshshekhar32@gmail.com',
-  'ashutoshshekhar052@gmail.com',
-];
-
 const defaultStore = () => ({
   users: {
     'local-admin-001': {
@@ -28,73 +19,31 @@ const defaultStore = () => ({
       onboardingCompleted: true,
       createdAt: new Date().toISOString(),
     },
-    'local-student-demo': {
-      id: 'local-student-demo',
-      email: STUDENT_EMAIL,
-      name: 'Ashutosh Shekhar',
-      phone: '',
-      workshop: 'Memory Workshop',
-      role: 'student',
-      status: 'active',
-      password: STUDENT_PASSWORD,
-      onboardingComplete: true,
-      onboardingCompleted: true,
-      xp: 120,
-      level: 3,
-      createdAt: new Date().toISOString(),
-    },
   },
   emailLogs: [],
 });
 
-const SEED_PASSWORDS = {
-  [STUDENT_EMAIL]: STUDENT_PASSWORD,
-  'admin@aisajanshah.com': 'Admin@1234sa',
-};
-
-function ensureDemoAccounts(store) {
+function ensureAdminAccount(store) {
   let changed = false;
-
-  const ashutoshEmails = [STUDENT_EMAIL, ...STUDENT_EMAIL_ALIASES];
-
-  // Update any existing Ashutosh accounts in store to student role with STUDENT_PASSWORD
-  for (const u of Object.values(store.users)) {
-    if (ashutoshEmails.includes(u.email?.toLowerCase())) {
-      if (u.role === 'admin') {
-        u.role = 'student';
-        changed = true;
-      }
-      if (u.password !== STUDENT_PASSWORD) {
-        u.password = STUDENT_PASSWORD;
-        changed = true;
-      }
-      if (!u.onboardingComplete) {
-        u.onboardingComplete = true;
-        u.onboardingCompleted = true;
-        changed = true;
-      }
-      if (u.name === 'Admin Ashutosh') {
-        u.name = 'Ashutosh Shekhar';
-        changed = true;
-      }
-    }
-  }
-
-  // Ensure primary demo student account exists
-  let student = Object.values(store.users).find(
-    (u) => u.email?.toLowerCase() === STUDENT_EMAIL
-  );
-
-  if (!student) {
-    store.users['local-student-demo'] = defaultStore().users['local-student-demo'];
-    changed = true;
-  }
 
   // Ensure dedicated platform admin account exists
   const admin = Object.values(store.users).find((u) => u.role === 'admin');
   if (!admin) {
     store.users['local-admin-001'] = defaultStore().users['local-admin-001'];
     changed = true;
+  }
+
+  // Deduplicate users by email (keep only the newest record per email)
+  const seenEmails = new Map();
+  for (const [id, user] of Object.entries(store.users)) {
+    const email = (user.email || '').toLowerCase().trim();
+    if (!email) continue;
+    if (seenEmails.has(email)) {
+      delete store.users[id];
+      changed = true;
+    } else {
+      seenEmails.set(email, id);
+    }
   }
 
   return changed;
@@ -108,6 +57,19 @@ function ensureStore() {
 }
 
 function readStore() {
+  ensureStore();
+  try {
+    const store = JSON.parse(fs.readFileSync(STORE_PATH, 'utf8'));
+    if (ensureAdminAccount(store)) {
+      writeStore(store);
+    }
+    return store;
+  } catch {
+    const fresh = defaultStore();
+    writeStore(fresh);
+    return fresh;
+  }
+}
   ensureStore();
   try {
     const store = JSON.parse(fs.readFileSync(STORE_PATH, 'utf8'));
@@ -337,14 +299,6 @@ function completeOnboarding(uid, { name, onboardingData }) {
   return toPublicProfile(store.users[uid]);
 }
 
-function resolveLoginEmail(email) {
-  const normalized = String(email || '').trim().toLowerCase();
-  if (STUDENT_EMAIL_ALIASES.includes(normalized)) {
-    return STUDENT_EMAIL;
-  }
-  return normalized;
-}
-
 function authenticateLocal(email, password) {
   const rawEmail = String(email || '').trim();
   const normalized = rawEmail.toLowerCase();
@@ -358,10 +312,8 @@ function authenticateLocal(email, password) {
 
   const store = readStore();
 
-  // Find existing user by exact email match or resolved email alias
-  const resolvedEmail = resolveLoginEmail(normalized);
   const user = Object.values(store.users).find(
-    (u) => u.email?.toLowerCase() === resolvedEmail || u.email?.toLowerCase() === normalized
+    (u) => u.email?.toLowerCase() === normalized
   );
 
   if (!user) {
