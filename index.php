@@ -104,6 +104,7 @@ if (strpos($path, '/api') === 0) {
 // 2. Serve SPA index.html for all frontend client-side routes (/login, /student, /admin, etc.)
 $indexFile = __DIR__ . '/index.html';
 if (file_exists($indexFile)) {
+    http_response_code(200);
     header('Content-Type: text/html; charset=UTF-8');
     header('Cache-Control: no-cache, no-store, must-revalidate, max-age=0');
     header('Pragma: no-cache');

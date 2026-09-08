@@ -1,3 +1,6 @@
+Options -MultiViews
+DirectoryIndex index.php index.html
+
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
@@ -5,12 +8,19 @@
   # Block access to sensitive files and directories
   RewriteRule ^(\.git|\.env|backend/data|backend/local-store.json) - [F,L]
 
-  # Serve existing static files directly (JS, CSS, images, icons)
-  RewriteCond %{REQUEST_FILENAME} -f
+  # Serve existing static files directly (JS, CSS, images, icons, fonts)
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
-  # Route all dynamic routes and /api/* calls to index.php (proxies to Node port 5000)
+  # Route all SPA client routes (/login, /student, /admin, etc.) and /api to index.php
   RewriteRule ^ index.php [L]
+</IfModule>
+
+# Fallbacks for Cloudways NGINX + Apache hybrid setup
+ErrorDocument 404 /index.php
+<IfModule mod_dir.c>
+  FallbackResource /index.php
 </IfModule>
 
 # Security Headers & Cache Control
@@ -26,6 +36,3 @@
     Header set Expires 0
   </FilesMatch>
 </IfModule>
-
-
-
