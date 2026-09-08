@@ -61,6 +61,13 @@ sleep(2);
 $health = shell_exec('curl -s http://127.0.0.1:5000/api/health 2>&1');
 echo "Health check: $health\n";
 
+$currentCommit = shell_exec('git log -1 --oneline 2>&1');
+echo "Current Git Commit: $currentCommit\n";
+
+// Purge varnish / proxy cache if available
+@shell_exec('curl -s -X PURGE http://127.0.0.1/ 2>&1');
+@shell_exec('varnishadm "ban req.url ~ ." 2>&1');
+
 $status = shell_exec('pm2 status 2>&1');
 echo "\nPM2 Status:\n$status\n";
 
