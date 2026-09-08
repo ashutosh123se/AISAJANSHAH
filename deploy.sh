@@ -1,19 +1,28 @@
 #!/bin/bash
 # Cloudways deployment script for AI Sajan Shah (PM2 managed)
 
-APP_DIR="/home/master/applications/jpkbjeavpe"
-REPO_DIR="$APP_DIR/git_repo"
-WEB_DIR="$APP_DIR/public_html"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR" || exit 1
 
 echo "=== Deploying AI Sajan Shah ==="
+echo "Working directory: $(pwd)"
 
-# 1. Sync git_repo to public_html cleanly
-if [ -d "$REPO_DIR" ] && [ "$PWD" != "$WEB_DIR" ]; then
-    echo "Syncing repository files..."
-    rsync -r --no-perms --no-owner --no-group --exclude='node_modules' --exclude='.env' --exclude='data' --exclude='backend/data' --exclude='*.log' --exclude='.git' "$REPO_DIR/" "$WEB_DIR/"
+# If we are in git_repo next to public_html, sync files
+if [[ "$SCRIPT_DIR" == *"git_repo"* ]]; then
+    PARENT_DIR="$(dirname "$SCRIPT_DIR")"
+    WEB_DIR="$PARENT_DIR/public_html"
+    if [ -d "$WEB_DIR" ]; then
+        echo "Syncing git_repo to public_html..."
+        rsync -r --no-perms --no-owner --no-group --exclude='node_modules' --exclude='.env' --exclude='data' --exclude='backend/data' --exclude='*.log' --exclude='.git' "$SCRIPT_DIR/" "$WEB_DIR/"
+        cd "$WEB_DIR" || exit 1
+    fi
 fi
 
-cd "$WEB_DIR" || exit 1
+# 1. Pull latest code if git is available
+if [ -d ".git" ]; then
+    echo "Pulling latest git changes..."
+    git pull origin main 2>/dev/null || true
+fi
 
 # 2. Determine PM2 binary (global pm2 or npx pm2)
 PM2_CMD="pm2"
@@ -27,8 +36,8 @@ if $PM2_CMD describe aisajanshah-backend &> /dev/null; then
     $PM2_CMD restart ecosystem.config.js
 else
     echo "Starting backend with PM2..."
-    pkill -f "node backend/bundle.js" || true
-    pkill -f "node backend/server.js" || true
+    pkill -f "node backend/bundle.js" 2>/dev/null || true
+    pkill -f "node backend/server.js" 2>/dev/null || true
     sleep 1
     $PM2_CMD start ecosystem.config.js
 fi
@@ -36,7 +45,7 @@ fi
 # 4. Save PM2 process list
 $PM2_CMD save 2>/dev/null || true
 
-# 5. Setup PM2 startup script (auto-start on server reboot)
+# 5. Setup PM2 startup script
 $PM2_CMD startup 2>/dev/null || true
 
 sleep 2
