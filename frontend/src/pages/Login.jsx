@@ -63,210 +63,208 @@ const Login = () => {
   const displayError = localError || authError;
 
   return (
-    <div className="auth-page">
-      {/* ── Brand panel (left) ── */}
-      <div className="auth-brand">
+    <div className="min-h-screen w-full flex flex-col lg:flex-row bg-[#0C0B0A] text-white relative overflow-x-hidden font-sans">
+      {/* Ambient background glows */}
+      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[#E55A28]/15 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[450px] h-[450px] rounded-full bg-[#D4A017]/10 blur-[130px] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(229,90,40,0.12),transparent_70%)] pointer-events-none" />
+
+      {/* ── Desktop Left Brand Column (Hidden on mobile) ── */}
+      <div className="hidden lg:flex flex-col justify-between relative overflow-hidden flex-[1.15] p-10 xl:p-14 z-10 border-r border-white/10 bg-black/40">
         <div className="auth-brand-texture" aria-hidden="true" />
         <div className="auth-brand-accent-bar" aria-hidden="true" />
-        <p className="auth-brand-watermark" aria-hidden="true">TRANSFORM · GROW · ACHIEVE</p>
 
-        <div className="auth-brand-glow auth-brand-glow--accent" aria-hidden="true" />
-        <div className="auth-brand-glow auth-brand-glow--warm" aria-hidden="true" />
-        <div className="auth-brand-orbit" aria-hidden="true">
-          <span /><span /><span />
-        </div>
-
-        {/* Logo showcase */}
-        <div className="auth-brand-header auth-animate-in">
-          <div className="auth-logo-showcase">
-            <div className="auth-logo-orbit-ring" aria-hidden="true" />
-            <div className="auth-logo-diamond">
-              <img src="/favicon.png" alt="Sajan Shah Logo" className="w-9 h-9 object-contain" />
+        {/* Top Logo showcase */}
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#FF7A45] via-[#E55A28] to-[#C2451B] flex items-center justify-center text-white shadow-xl shadow-orange-500/25 border border-white/20">
+              <Sparkles className="w-7 h-7" />
             </div>
-            <span className="auth-logo-live">
-              <span className="auth-logo-live-dot" />
+            <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-black/90 text-white/90 border border-orange-500/40 whitespace-nowrap">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
               Live 24/7
             </span>
           </div>
 
-          <div className="auth-logo-lockup">
-            <span className="auth-logo-prefix">AI</span>
-            <h1 className="auth-logo-hero">Sajan Shah</h1>
-            <div className="auth-logo-swoosh" aria-hidden="true">
-              <svg viewBox="0 0 200 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M2 8C40 2 80 2 120 6C150 9 175 10 198 4" stroke="url(#swoosh)" strokeWidth="2.5" strokeLinecap="round"/>
-                <defs>
-                  <linearGradient id="swoosh" x1="0" y1="0" x2="200" y2="0">
-                    <stop stopColor="#E55A28" stopOpacity="0"/>
-                    <stop offset="0.3" stopColor="#E55A28"/>
-                    <stop offset="0.7" stopColor="#FFB347"/>
-                    <stop offset="1" stopColor="#FFB347" stopOpacity="0"/>
-                  </linearGradient>
-                </defs>
-              </svg>
-            </div>
-            <p className="auth-logo-tagline">Your Personal Mentor, Always On</p>
+          <div>
+            <span className="text-[11px] font-bold tracking-[0.25em] text-[#E55A28] uppercase block">AI Personal Mentor</span>
+            <h1 className="text-2xl xl:text-3xl font-serif font-bold text-white tracking-tight">Sajan Shah</h1>
           </div>
         </div>
 
-        <div className="auth-brand-body auth-animate-in auth-animate-in--delay-1">
-          <div className="auth-quote-block">
-            <p className="auth-quote-text">
+        {/* Middle Value Proposition */}
+        <div className="my-auto py-10">
+          <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-md mb-8 max-w-lg">
+            <p className="font-serif italic text-lg text-white/90 leading-relaxed">
               &ldquo;Your mind is your greatest asset — let me help you unlock it.&rdquo;
             </p>
-            <p className="auth-quote-sig">— The Sajan Shah Family</p>
+            <p className="font-cursive text-xl text-[#FF8C5A] mt-2">— The Sajan Shah Family</p>
           </div>
 
-          <h2 className="auth-headline">
-            Unlock Your
-            <em> True Potential</em>
+          <h2 className="text-3xl xl:text-4xl font-serif font-bold text-white mb-6 leading-tight">
+            Unlock Your <span className="italic bg-gradient-to-r from-[#FFB347] to-[#E55A28] bg-clip-text text-transparent">True Potential</span>
           </h2>
 
-          <div className="feature-grid">
+          <div className="grid grid-cols-3 gap-3 max-w-lg">
             {FEATURES.map((f) => (
-              <div key={f.title} className="feature-card">
-                <div className="feature-card-top">
-                  <span className="feature-num">{f.num}</span>
-                  <div className="feature-icon">
-                    <f.icon className="w-[18px] h-[18px]" strokeWidth={1.75} />
-                  </div>
+              <div key={f.title} className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-orange-500/40 hover:bg-white/[0.06] transition-all">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-bold text-[#E55A28]">{f.num}</span>
+                  <f.icon className="w-4 h-4 text-[#FF8C5A]" />
                 </div>
-                <h4>{f.title}</h4>
-                <p>{f.desc}</p>
+                <h4 className="font-serif font-semibold text-xs text-white mb-1">{f.title}</h4>
+                <p className="text-[11px] text-white/50 leading-relaxed">{f.desc}</p>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="auth-stats-bar auth-animate-in auth-animate-in--delay-2">
-          <div className="auth-stat-item">
-            <span className="auth-stat-value auth-stat-value--accent">15M+</span>
-            <span className="auth-stat-label">Lives Transformed</span>
+        {/* Bottom Stats */}
+        <div className="flex items-center gap-6 pt-6 border-t border-white/10">
+          <div>
+            <div className="text-2xl font-serif font-bold bg-gradient-to-r from-[#FF8C5A] to-[#E55A28] bg-clip-text text-transparent">15M+</div>
+            <div className="text-[10px] font-bold tracking-wider uppercase text-white/40">Lives Transformed</div>
           </div>
-          <div className="auth-stat-divider" aria-hidden="true" />
-          <div className="auth-stat-item">
-            <span className="auth-stat-value">3×</span>
-            <span className="auth-stat-label">TEDx Speaker</span>
+          <div className="w-px h-8 bg-white/10" />
+          <div>
+            <div className="text-2xl font-serif font-bold text-white">3×</div>
+            <div className="text-[10px] font-bold tracking-wider uppercase text-white/40">TEDx Speaker</div>
           </div>
-          <div className="auth-stat-divider" aria-hidden="true" />
-          <div className="auth-stat-item">
-            <span className="auth-stat-value auth-stat-value--gold">90</span>
-            <span className="auth-stat-label">Day Framework</span>
+          <div className="w-px h-8 bg-white/10" />
+          <div>
+            <div className="text-2xl font-serif font-bold text-[#FFD700]">90</div>
+            <div className="text-[10px] font-bold tracking-wider uppercase text-white/40">Day Matrix</div>
           </div>
         </div>
       </div>
 
-      {/* ── Login form (right) ── */}
-      <div className="auth-form-panel flex flex-col justify-center min-h-screen py-8 px-4 sm:px-6 lg:px-12">
-        <div className="auth-form-inner w-full max-w-md mx-auto bg-white sm:bg-transparent p-6 sm:p-0 rounded-2xl sm:rounded-none border sm:border-0 border-[var(--color-border)] shadow-sm sm:shadow-none">
-          
-          {/* Mobile & Tablet Brand Header */}
-          <div className="lg:hidden flex items-center justify-between mb-8 pb-5 border-b border-[var(--color-border)]/60">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FF7A45] to-[#E55A28] flex items-center justify-center text-white shadow-md shadow-orange-500/20">
-                <Sparkles className="w-5 h-5" strokeWidth={2} />
+      {/* ── Form Column (Mobile & Desktop) ── */}
+      <div className="flex-1 flex flex-col justify-between min-h-screen p-5 sm:p-8 lg:p-12 xl:p-16 relative z-20">
+        
+        {/* Mobile Header (Brand Showcase on mobile) */}
+        <div className="lg:hidden flex items-center justify-between pt-2 pb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#FF7A45] to-[#E55A28] flex items-center justify-center text-white shadow-lg shadow-orange-500/20 border border-white/20">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="font-serif font-bold text-lg text-white leading-none block">AI Sajan Shah</span>
+              <span className="text-[10px] font-sans font-bold tracking-widest text-[#FF8C5A] uppercase mt-1 block">AI Mentor Matrix</span>
+            </div>
+          </div>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-sans font-bold uppercase tracking-wider bg-white/10 text-white border border-white/15 backdrop-blur-md">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+            Live 24/7
+          </span>
+        </div>
+
+        {/* Center Form Card */}
+        <div className="w-full max-w-md mx-auto my-auto py-4">
+          <div className="bg-white/[0.04] backdrop-blur-2xl border border-white/10 rounded-3xl p-6 sm:p-9 shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#E55A28] to-transparent opacity-70" />
+
+            <div className="mb-6 sm:mb-8">
+              <h2 className="text-2xl sm:text-3xl font-serif font-bold text-white mb-2">Welcome Back</h2>
+              <p className="text-xs sm:text-sm font-sans text-white/60">
+                Sign in to continue your learning journey
+              </p>
+            </div>
+
+            {displayError && (
+              <div className="mb-5 p-3.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-200 text-xs sm:text-sm flex items-start gap-2.5 backdrop-blur-sm">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-400" />
+                <span>{displayError}</span>
               </div>
+            )}
+
+            <form onSubmit={handleEmailLogin} className="flex flex-col gap-4 sm:gap-5">
               <div>
-                <span className="font-serif font-bold text-lg text-[var(--color-primary)] leading-none block">AI Sajan Shah</span>
-                <span className="text-[10px] font-sans font-bold tracking-widest text-[var(--color-accent)] uppercase mt-0.5 block">AI Mentor Matrix</span>
+                <label className="text-xs font-semibold text-white/70 mb-1.5 block tracking-wider uppercase" htmlFor="email">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40 w-4 h-4 pointer-events-none" />
+                  <input
+                    id="email"
+                    type="email"
+                    className="w-full pl-10 pr-4 py-3 sm:py-3.5 rounded-xl border border-white/10 bg-white/[0.05] focus:bg-white/[0.08] focus:border-[#E55A28] text-sm text-white placeholder-white/30 outline-none transition-all focus:ring-2 focus:ring-[#E55A28]/20"
+                    placeholder="name@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
               </div>
-            </div>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-sans font-bold uppercase tracking-wider bg-green-50 text-green-700 border border-green-200/60">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-              Live 24/7
-            </span>
-          </div>
 
-          <div className="mb-6 sm:mb-8">
-            <h2 className="text-2xl sm:text-3xl font-serif font-bold text-[var(--color-primary)] mb-2">Welcome Back</h2>
-            <p className="text-sm sm:text-[15px] font-sans text-[var(--color-text-secondary)]">
-              Sign in to continue your learning journey
-            </p>
-          </div>
-
-          {displayError && (
-            <div className="alert-error mb-5 sm:mb-6 p-3.5 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm flex items-start gap-2.5">
-              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5 text-red-500" />
-              <span>{displayError}</span>
-            </div>
-          )}
-
-          <form onSubmit={handleEmailLogin} className="flex flex-col gap-4 sm:gap-5">
-            <div>
-              <label className="form-label text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5 block" htmlFor="email">Email Address</label>
-              <div className="form-input-icon-wrap relative">
-                <Mail className="input-icon absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-hint)] w-4 h-4" />
-                <input
-                  id="email"
-                  type="email"
-                  className="form-input w-full pl-10 pr-4 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] focus:bg-white focus:border-[var(--color-accent)] text-sm font-sans outline-none transition-all"
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
+              <div>
+                <label className="text-xs font-semibold text-white/70 mb-1.5 block tracking-wider uppercase" htmlFor="password">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40 w-4 h-4 pointer-events-none" />
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    className="w-full pl-10 pr-11 py-3 sm:py-3.5 rounded-xl border border-white/10 bg-white/[0.05] focus:bg-white/[0.08] focus:border-[#E55A28] text-sm text-white placeholder-white/30 outline-none transition-all focus:ring-2 focus:ring-[#E55A28]/20"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white p-1 transition-colors"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
-            </div>
 
-            <div>
-              <label className="form-label text-xs font-semibold text-[var(--color-text-secondary)] mb-1.5 block" htmlFor="password">Password</label>
-              <div className="form-input-icon-wrap relative">
-                <Lock className="input-icon absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--color-text-hint)] w-4 h-4" />
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  className="form-input w-full pl-10 pr-11 py-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] focus:bg-white focus:border-[var(--color-accent)] text-sm font-sans outline-none transition-all"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
+              <div className="flex items-center justify-between pt-1">
+                <label className="flex items-center gap-2 cursor-pointer select-none text-xs sm:text-sm font-sans text-white/70">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="rounded border-white/20 bg-white/10 text-[#E55A28] focus:ring-[#E55A28] focus:ring-offset-0"
+                  />
+                  <span>Remember me</span>
+                </label>
                 <button
                   type="button"
-                  className="input-action absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-hint)] hover:text-[var(--color-primary)] p-1 transition-colors"
-                  onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  className="text-xs sm:text-sm font-sans font-medium text-[#FF8C5A] hover:text-[#FFA07A] transition-colors"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  Forgot password?
                 </button>
               </div>
-            </div>
 
-            <div className="flex items-center justify-between pt-1">
-              <label className="checkbox-label flex items-center gap-2 cursor-pointer select-none text-xs sm:text-sm font-sans text-[var(--color-text-secondary)]">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="rounded border-[var(--color-border)] text-[var(--color-accent)] focus:ring-[var(--color-accent)]"
-                />
-                <span>Remember me</span>
-              </label>
               <button
-                type="button"
-                className="text-xs sm:text-sm font-sans font-medium text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] transition-colors"
+                type="submit"
+                className="w-full py-3.5 sm:py-4 rounded-xl font-sans font-semibold text-sm sm:text-base text-white bg-gradient-to-r from-[#FF6B35] to-[#E55A28] hover:opacity-95 shadow-lg shadow-orange-500/25 active:scale-[0.99] transition-all mt-2 border border-white/15"
+                disabled={isSubmitting}
               >
-                Forgot password?
+                {isSubmitting ? 'Signing in…' : 'Sign In'}
               </button>
-            </div>
-
-            <button
-              type="submit"
-              className="btn-elegant w-full py-3.5 rounded-xl font-semibold text-sm sm:text-[15px] mt-2 shadow-md shadow-orange-500/20 active:scale-[0.99] transition-all"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? 'Signing in…' : 'Sign In'}
-            </button>
-          </form>
-
-          {/* Quick quote note on mobile */}
-          <div className="lg:hidden mt-8 pt-6 border-t border-[var(--color-border)]/60 text-center">
-            <p className="text-xs font-sans text-[var(--color-text-hint)] leading-relaxed">
-              &ldquo;Your mind is your greatest asset — let me help you unlock it.&rdquo;
-            </p>
-            <p className="font-serif italic text-xs text-[var(--color-accent)] mt-1">— Sajan Shah</p>
+            </form>
           </div>
         </div>
+
+        {/* Mobile Footer Trust Badges */}
+        <div className="lg:hidden pt-6 pb-2 text-center border-t border-white/10">
+          <p className="font-serif italic text-xs text-white/60">
+            &ldquo;Your mind is your greatest asset — let me help you unlock it.&rdquo;
+          </p>
+          <div className="flex items-center justify-center gap-3 mt-3 text-[10px] font-bold uppercase tracking-wider text-white/40">
+            <span>15M+ Students</span>
+            <span>•</span>
+            <span>3× TEDx</span>
+            <span>•</span>
+            <span>90-Day Matrix</span>
+          </div>
+        </div>
+
       </div>
     </div>
   );
