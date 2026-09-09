@@ -1,13 +1,20 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { 
   LayoutDashboard, BarChart2, Users, UserPlus, Upload, 
-  Mail, Code2, Gamepad2, Settings, LogOut, Sparkles
+  Mail, Code2, Gamepad2, Settings, LogOut, Sparkles, X
 } from 'lucide-react';
 
-const AdminSidebar = () => {
+const AdminSidebar = ({ onClose, isMobile = false }) => {
   const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    if (onClose) onClose();
+    await logout();
+    navigate('/login');
+  };
 
   const sections = [
     {
@@ -42,23 +49,41 @@ const AdminSidebar = () => {
   ];
 
   return (
-    <div className="w-full h-full bg-white flex flex-col overflow-y-auto">
-      {/* Top Logo */}
-      <div className="p-8 flex items-center gap-3 shrink-0">
-        <Sparkles className="w-6 h-6 text-[var(--color-accent)] shrink-0" />
-        <div className="flex flex-col">
-          <div className="flex whitespace-nowrap items-baseline gap-1">
-            <span className="font-serif font-bold text-xl text-[var(--color-primary)]">AI</span>
-            <span className="font-serif font-bold text-xl text-[var(--color-primary)]">Sajan Shah</span>
+    <div className="w-full h-full bg-white flex flex-col overflow-hidden">
+      {/* Top Logo & Optional Close Button */}
+      <div className="p-6 md:p-8 flex items-center justify-between shrink-0 border-b border-[var(--color-border)]/50">
+        <div 
+          className="flex items-center gap-3 cursor-pointer"
+          onClick={() => {
+            if (onClose) onClose();
+            navigate('/admin');
+          }}
+        >
+          <Sparkles className="w-6 h-6 text-[var(--color-accent)] shrink-0" />
+          <div className="flex flex-col">
+            <div className="flex whitespace-nowrap items-baseline gap-1">
+              <span className="font-serif font-bold text-xl text-[var(--color-primary)]">AI</span>
+              <span className="font-serif font-bold text-xl text-[var(--color-primary)]">Sajan Shah</span>
+            </div>
+            <span className="text-[10px] font-sans font-bold text-[var(--color-text-hint)] tracking-widest uppercase mt-0.5">Admin Matrix</span>
           </div>
-          <span className="text-[10px] font-sans font-bold text-[var(--color-text-hint)] tracking-widest uppercase mt-0.5">Admin Matrix</span>
         </div>
+
+        {isMobile && (
+          <button
+            onClick={onClose}
+            aria-label="Close Navigation"
+            className="p-1.5 rounded-lg text-[var(--color-text-secondary)] hover:bg-[var(--color-bg)] active:scale-95 transition-all"
+          >
+            <X className="w-5 h-5 text-[var(--color-primary)]" />
+          </button>
+        )}
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-6 pb-6 overflow-y-auto overflow-x-hidden mt-4">
+      <nav className="flex-1 px-5 py-4 overflow-y-auto overflow-x-hidden scrollbar-thin">
         {sections.map((section, idx) => (
-          <div key={idx} className="mb-6">
+          <div key={idx} className="mb-5">
             <p className="px-3 text-[10px] font-sans font-bold uppercase tracking-widest text-[var(--color-text-hint)] mb-2">
               {section.label}
             </p>
@@ -68,8 +93,11 @@ const AdminSidebar = () => {
                   key={item.path}
                   to={item.path}
                   end={item.exact}
+                  onClick={() => {
+                    if (onClose) onClose();
+                  }}
                   className={({ isActive }) => `
-                    flex items-center gap-3 px-3 py-2.5 rounded-lg text-[14px] font-sans transition-all duration-200
+                    flex items-center gap-3 px-3 py-2 rounded-lg text-[13.5px] font-sans transition-all duration-200
                     ${isActive 
                       ? 'bg-[var(--color-bg)] text-[var(--color-primary)] font-semibold' 
                       : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg)] hover:text-[var(--color-primary)] font-medium'
@@ -78,8 +106,8 @@ const AdminSidebar = () => {
                 >
                   {({ isActive }) => (
                     <>
-                      <item.icon className={`w-[18px] h-[18px] ${isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-hint)]'}`} />
-                      <span>{item.label}</span>
+                      <item.icon className={`w-[18px] h-[18px] shrink-0 ${isActive ? 'text-[var(--color-accent)]' : 'text-[var(--color-text-hint)]'}`} />
+                      <span className="truncate">{item.label}</span>
                     </>
                   )}
                 </NavLink>
@@ -90,9 +118,9 @@ const AdminSidebar = () => {
       </nav>
 
       {/* Bottom Logout */}
-      <div className="p-6 mt-auto border-t border-[var(--color-border)] shrink-0">
+      <div className="p-5 border-t border-[var(--color-border)] shrink-0 bg-white">
         <button 
-          onClick={logout}
+          onClick={handleLogout}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[var(--color-text-secondary)] hover:text-red-600 hover:bg-red-50 transition-all duration-200 text-[14px] font-sans font-medium text-left"
         >
           <LogOut className="w-[18px] h-[18px]" />
