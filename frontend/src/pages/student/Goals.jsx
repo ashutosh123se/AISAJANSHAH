@@ -220,64 +220,66 @@ const Goals = () => {
   }
 
   return (
-    <div className="max-w-[1000px] mx-auto w-full px-4 lg:px-6 py-6 lg:py-10">
+    <div className="max-w-[1000px] mx-auto w-full px-3.5 sm:px-6 py-4 sm:py-8 lg:py-10">
 
       {/* Main Goal Card */}
-      <div className="bg-white border border-[var(--color-border)] p-8 mb-8">
+      <div className="bg-white border border-[var(--color-border)] p-5 sm:p-8 mb-6 sm:mb-8 rounded-xl sm:rounded-2xl">
         
         <div>
-          <div className="flex items-center justify-between mb-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[var(--color-bg)] border border-[var(--color-border)]">
-              <Target className="w-4 h-4 text-[var(--color-text-secondary)]" />
-              <span className="text-[12px] font-sans font-bold text-[var(--color-text-secondary)] uppercase tracking-[0.2em]">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md">
+              <Target className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[var(--color-text-secondary)]" />
+              <span className="text-[10px] sm:text-[12px] font-sans font-bold text-[var(--color-text-secondary)] uppercase tracking-[0.15em] sm:tracking-[0.2em]">
                 Primary Directive (90 Days)
               </span>
             </div>
             {!isEditing && (
-              <button className="p-2.5 bg-white hover:bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-primary)] transition-colors"
+              <button className="p-2 sm:p-2.5 bg-white hover:bg-[var(--color-bg)] border border-[var(--color-border)] text-[var(--color-primary)] transition-colors rounded-lg"
                 onClick={() => setIsEditing(true)}>
-                <Edit2 className="w-4 h-4" />
+                <Edit2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>
             )}
           </div>
           
           {isEditing ? (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <input 
                 type="text" 
                 value={tempTitle}
                 onChange={(e) => setTempTitle(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && saveGoal()}
-                className="w-full bg-white border border-[var(--color-border)] text-[var(--color-primary)] px-5 py-3 focus:outline-none focus:border-[var(--color-primary)] transition-colors font-sans"
+                className="w-full bg-white border border-[var(--color-border)] text-[var(--color-primary)] px-3.5 sm:px-5 py-2.5 sm:py-3 text-sm sm:text-base focus:outline-none focus:border-[var(--color-primary)] transition-colors font-sans rounded-lg"
                 autoFocus
               />
-              <button onClick={saveGoal} className="btn-elegant px-4 h-12">
-                <Save className="w-5 h-5" />
+              <button onClick={saveGoal} className="btn-elegant px-3.5 sm:px-4 h-10 sm:h-12 rounded-lg">
+                <Save className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             </div>
           ) : (
-            <h2 className="text-3xl lg:text-4xl font-serif font-bold text-[var(--color-primary)] leading-tight mb-2 tracking-tight">
+            <h2 className="text-xl sm:text-2xl lg:text-4xl font-serif font-bold text-[var(--color-primary)] leading-tight mb-2 tracking-tight">
               {goal.title}
             </h2>
           )}
 
-          <div className="mt-8">
-            <div className="flex justify-between items-end mb-3">
-              <span className="text-[14px] font-sans font-medium text-[var(--color-text-secondary)]">Optimization Progress</span>
-              <span className="text-[16px] font-sans font-bold text-[var(--color-primary)]">{progressPercent}%</span>
+          <div className="mt-6 sm:mt-8">
+            <div className="flex justify-between items-end mb-2 sm:mb-3">
+              <span className="text-xs sm:text-[14px] font-sans font-medium text-[var(--color-text-secondary)]">Optimization Progress</span>
+              <span className="text-sm sm:text-[16px] font-sans font-bold text-[var(--color-primary)]">{progressPercent}%</span>
             </div>
-            <div className="w-full h-2 bg-[var(--color-bg)] overflow-hidden border border-[var(--color-border)]">
-              <div className="h-full bg-[var(--color-primary)] transition-all duration-1000 ease-out"
-                style={{ width: `${Math.max(2, progressPercent)}%` }} />
+            <div className="w-full h-2 bg-[var(--color-bg)] overflow-hidden border border-[var(--color-border)] rounded-full">
+              <div className="h-full bg-[var(--color-primary)] transition-all duration-1000 ease-out" 
+                   style={{ width: `${Math.max(2, progressPercent)}%` }}>
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-6 mt-6 text-[14px] font-sans font-medium">
-            <div className="flex items-center gap-2 text-[var(--color-text-secondary)] bg-[var(--color-bg)] px-3 py-1.5 border border-[var(--color-border)]">
-              <Calendar className="w-4 h-4" />
-              Target: {targetDateObj.toLocaleDateString()}
+
+          <div className="flex flex-wrap gap-4 sm:gap-6 mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-[var(--color-border)]">
+            <div className="flex items-center gap-2 text-xs sm:text-[13px] font-sans font-medium text-[var(--color-text-secondary)]">
+              <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[var(--color-text-secondary)]" />
+              Target: {new Date(goal.targetDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </div>
-            <div className={`flex items-center gap-2 px-3 py-1.5 border ${daysRemaining < 14 ? 'text-orange-600 bg-orange-50 border-orange-200' : 'text-[var(--color-text-secondary)] bg-[var(--color-bg)] border-[var(--color-border)]'}`}>
-              <Clock className={`w-4 h-4 ${daysRemaining < 14 ? 'text-orange-600' : 'text-[var(--color-text-secondary)]'}`} />
+            <div className="flex items-center gap-2 text-xs sm:text-[13px] font-sans font-medium text-[var(--color-text-secondary)]">
+              <Clock className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${daysRemaining < 14 ? 'text-orange-600' : 'text-[var(--color-text-secondary)]'}`} />
               {daysRemaining} days remaining
             </div>
           </div>

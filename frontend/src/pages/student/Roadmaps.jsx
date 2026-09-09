@@ -121,36 +121,36 @@ const Roadmaps = () => {
   };
 
   return (
-    <div className="max-w-[1000px] mx-auto w-full px-4 lg:px-6 py-6 lg:py-10">
+    <div className="max-w-[1000px] mx-auto w-full px-3.5 sm:px-6 py-4 sm:py-8 lg:py-10">
       {/* Header */}
-      <div className="mb-12 text-center">
-        <h2 className="text-4xl lg:text-5xl font-serif font-bold text-[var(--color-primary)] tracking-tight mb-4">
+      <div className="mb-6 sm:mb-12 text-center">
+        <h2 className="text-2xl sm:text-3xl lg:text-5xl font-serif font-bold text-[var(--color-primary)] tracking-tight mb-2 sm:mb-4">
           Neural Pathways
         </h2>
-        <p className="text-[15px] font-sans text-[var(--color-text-secondary)] max-w-xl mx-auto">
+        <p className="text-xs sm:text-[15px] font-sans text-[var(--color-text-secondary)] max-w-xl mx-auto">
           Navigate your cognitive growth journey. Follow the path to unlock new skills and optimize your performance.
         </p>
       </div>
 
       {/* Active Roadmap Hero Card */}
-      <div className="bg-white border border-[var(--color-border)] p-8 lg:p-10 mb-16">
-        <div className="flex flex-col md:flex-row gap-10 items-center">
+      <div className="bg-white border border-[var(--color-border)] p-5 sm:p-8 lg:p-10 mb-8 sm:mb-16 rounded-xl sm:rounded-2xl">
+        <div className="flex flex-col md:flex-row gap-6 sm:gap-10 items-center">
           <div className="flex-1 w-full">
-            <div className="flex items-center gap-3 mb-4">
-              <span className="text-[12px] font-sans font-bold uppercase tracking-[0.2em] px-3 py-1.5 text-[var(--color-text-secondary)] bg-[var(--color-bg)] border border-[var(--color-border)]">
+            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+              <span className="text-[10px] sm:text-[12px] font-sans font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] px-2.5 sm:px-3 py-1 sm:py-1.5 text-[var(--color-text-secondary)] bg-[var(--color-bg)] border border-[var(--color-border)] rounded-md">
                 Active Directive
               </span>
             </div>
-            <h3 className="text-3xl lg:text-4xl font-serif font-bold text-[var(--color-primary)] mt-1 leading-tight">{activeRoadmap.title}</h3>
-            <p className="text-[15px] font-sans mt-4 mb-8 text-[var(--color-text-secondary)] max-w-lg">
+            <h3 className="text-xl sm:text-2xl lg:text-4xl font-serif font-bold text-[var(--color-primary)] mt-1 leading-tight">{activeRoadmap.title}</h3>
+            <p className="text-xs sm:text-[15px] font-sans mt-2 sm:mt-4 mb-5 sm:mb-8 text-[var(--color-text-secondary)] max-w-lg leading-relaxed">
               {activeRoadmap.description}
             </p>
             <div className="mb-2">
-              <div className="flex justify-between items-end mb-3">
-                <span className="text-[14px] font-sans font-medium text-[var(--color-text-secondary)]">Optimization Progress</span>
-                <span className="text-[16px] font-sans font-bold text-[var(--color-primary)]">{progressPercent}%</span>
+              <div className="flex justify-between items-end mb-2 sm:mb-3">
+                <span className="text-xs sm:text-[14px] font-sans font-medium text-[var(--color-text-secondary)]">Optimization Progress</span>
+                <span className="text-sm sm:text-[16px] font-sans font-bold text-[var(--color-primary)]">{progressPercent}%</span>
               </div>
-              <div className="w-full max-w-lg h-2 bg-[var(--color-bg)] overflow-hidden border border-[var(--color-border)]">
+              <div className="w-full max-w-lg h-2 bg-[var(--color-bg)] overflow-hidden border border-[var(--color-border)] rounded-full">
                 <div className="h-full bg-[var(--color-primary)] transition-all duration-1000 ease-out" 
                      style={{ width: `${Math.max(2, progressPercent)}%` }}>
                 </div>
@@ -158,21 +158,21 @@ const Roadmaps = () => {
             </div>
             
             {progressPercent === 100 && (
-              <div className="mt-8 inline-flex items-center gap-3 px-6 py-3 font-sans font-bold text-green-700 bg-green-50 border border-green-200">
-                <CheckCircle2 className="w-5 h-5 text-green-600" /> Directive Complete!
+              <div className="mt-6 sm:mt-8 inline-flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2.5 sm:py-3 font-sans font-bold text-xs sm:text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg">
+                <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" /> Directive Complete!
               </div>
             )}
           </div>
 
           {nextMilestone && progressPercent < 100 && (
-            <div className="w-full md:w-[320px] p-6 flex-shrink-0 flex flex-col justify-center border border-[var(--color-border)] bg-[var(--color-bg)]">
-              <h4 className="text-[12px] font-sans font-bold text-[var(--color-primary)] uppercase tracking-wider mb-4 flex items-center gap-2">
-                <Target className="w-4 h-4" /> Next Parameter
+            <div className="w-full md:w-[320px] p-4 sm:p-6 flex-shrink-0 flex flex-col justify-center border border-[var(--color-border)] bg-[var(--color-bg)] rounded-xl">
+              <h4 className="text-[11px] sm:text-[12px] font-sans font-bold text-[var(--color-primary)] uppercase tracking-wider mb-2 sm:mb-4 flex items-center gap-2">
+                <Target className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Next Parameter
               </h4>
-              <p className="text-[18px] font-serif font-semibold text-[var(--color-primary)] leading-snug mb-2">
+              <p className="text-base sm:text-[18px] font-serif font-semibold text-[var(--color-primary)] leading-snug mb-1 sm:mb-2">
                 {nextMilestone.lessonTitle}
               </p>
-              <p className="text-[14px] font-sans text-[var(--color-text-secondary)]">
+              <p className="text-xs sm:text-[14px] font-sans text-[var(--color-text-secondary)]">
                 {nextMilestone.moduleTitle.split(':')[0]}
               </p>
             </div>

@@ -23,18 +23,18 @@ const MentalHealth = () => {
   ];
 
   return (
-    <div className="max-w-[1000px] mx-auto w-full px-4 lg:px-6 py-6 lg:py-10">
+    <div className="max-w-[1000px] mx-auto w-full px-3.5 sm:px-6 py-4 sm:py-8 lg:py-10">
 
       {/* Banner */}
-      <div className="p-8 lg:p-10 mb-8 border border-[var(--color-border)] bg-white">
+      <div className="p-5 sm:p-8 lg:p-10 mb-6 sm:mb-8 border border-[var(--color-border)] bg-white rounded-xl sm:rounded-2xl">
         <div>
-          <h2 className="text-4xl font-serif font-bold text-[var(--color-primary)] tracking-tight mb-2">Mind Care</h2>
-          <p className="text-[16px] font-sans mt-3 max-w-2xl text-[var(--color-text-secondary)] leading-relaxed">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-[var(--color-primary)] tracking-tight mb-2">Mind Care</h2>
+          <p className="text-sm sm:text-base font-sans mt-2 sm:mt-3 max-w-2xl text-[var(--color-text-secondary)] leading-relaxed">
             A safe space for your mental wellness. Taking care of your mind is the first step to unlocking your ultimate potential.
           </p>
-          <div className="inline-flex items-center gap-2 mt-6 px-4 py-2 bg-[var(--color-bg)] border border-[var(--color-border)]">
-            <Shield className="w-4 h-4 text-[var(--color-text-secondary)]" />
-            <p className="text-[12px] font-sans text-[var(--color-text-secondary)]">
+          <div className="flex items-start sm:items-center gap-2 mt-4 sm:mt-6 p-3 sm:px-4 sm:py-2 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg">
+            <Shield className="w-4 h-4 text-[var(--color-text-secondary)] shrink-0 mt-0.5 sm:mt-0" />
+            <p className="text-[11px] sm:text-xs font-sans text-[var(--color-text-secondary)]">
               Provides emotional support and AI mentorship, not professional medical advice.
             </p>
           </div>
@@ -42,36 +42,36 @@ const MentalHealth = () => {
       </div>
 
       {/* Mood Check-in */}
-      <div className="p-8 lg:p-10 text-center mb-8 bg-white border border-[var(--color-border)]">
-        <h3 className="text-xl font-serif font-bold text-[var(--color-primary)]">Telemetry Check: <span className="text-[var(--color-text-secondary)] font-medium">How are you feeling today?</span></h3>
-        <div className="flex justify-center gap-4 lg:gap-6 mt-8 flex-wrap">
+      <div className="p-5 sm:p-8 lg:p-10 text-center mb-6 sm:mb-8 bg-white border border-[var(--color-border)] rounded-xl sm:rounded-2xl">
+        <h3 className="text-lg sm:text-xl font-serif font-bold text-[var(--color-primary)]">Telemetry Check: <span className="text-[var(--color-text-secondary)] font-medium">How are you feeling today?</span></h3>
+        <div className="flex justify-center gap-2 sm:gap-4 lg:gap-6 mt-6 sm:mt-8 flex-wrap">
           {moods.map((mood) => (
             <div key={mood.id} onClick={() => setSelectedMood(mood)}
-              className={`flex flex-col items-center justify-center gap-3 p-4 cursor-pointer transition-all duration-300 w-[90px] h-[100px] border ${selectedMood?.id === mood.id ? `border-[var(--color-primary)] bg-[var(--color-bg)]` : 'border-[var(--color-border)] bg-white hover:bg-[var(--color-bg)]'}`}>
-              <span className="text-3xl">{mood.emoji}</span>
-              <span className={`text-[13px] font-sans font-bold tracking-wide ${selectedMood?.id === mood.id ? 'text-[var(--color-primary)]' : 'text-[var(--color-text-secondary)]'}`}>
+              className={`flex flex-col items-center justify-center gap-2 sm:gap-3 p-2.5 sm:p-4 cursor-pointer transition-all duration-300 w-[72px] sm:w-[90px] h-[84px] sm:h-[100px] rounded-lg border ${selectedMood?.id === mood.id ? `border-[var(--color-primary)] bg-[var(--color-bg)] shadow-xs` : 'border-[var(--color-border)] bg-white hover:bg-[var(--color-bg)]'}`}>
+              <span className="text-2xl sm:text-3xl">{mood.emoji}</span>
+              <span className={`text-[11px] sm:text-[13px] font-sans font-bold tracking-wide ${selectedMood?.id === mood.id ? 'text-[var(--color-primary)]' : 'text-[var(--color-text-secondary)]'}`}>
                 {mood.label}
               </span>
             </div>
           ))}
         </div>
         {selectedMood && (
-          <div className="mt-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className={`inline-block px-6 py-4 bg-[var(--color-bg)] border border-[var(--color-border)] mb-6`}>
-              <p className={`text-[15px] font-sans font-medium text-[var(--color-primary)] max-w-lg mx-auto leading-relaxed`}>{selectedMood.msg}</p>
+          <div className="mt-8 sm:mt-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className={`inline-block px-4 sm:px-6 py-3 sm:py-4 bg-[var(--color-bg)] border border-[var(--color-border)] mb-4 sm:mb-6 rounded-lg`}>
+              <p className={`text-xs sm:text-[15px] font-sans font-medium text-[var(--color-primary)] max-w-lg mx-auto leading-relaxed`}>{selectedMood.msg}</p>
             </div>
             {['low', 'anxious', 'okay'].includes(selectedMood.id) && (
-              <div className="flex flex-wrap justify-center gap-4">
+              <div className="flex flex-col sm:flex-row justify-center gap-3 max-w-md mx-auto">
                 <button onClick={() => navigate('/student/chat', { state: { initialMessage: `Hi Sajan! I am feeling ${selectedMood.label.toLowerCase()} today. ${selectedMood.msg}` } })}
-                  className="btn-elegant px-8 py-3.5">
+                  className="btn-elegant w-full sm:w-auto px-6 py-3">
                   Initialize Sajan AI
                 </button>
                 {['low', 'anxious'].includes(selectedMood.id) && (
                   <>
-                    <button className="px-8 py-3.5 font-sans font-bold text-[var(--color-primary)] border border-[var(--color-primary)] bg-white hover:bg-[var(--color-bg)] transition-all duration-300">
+                    <button className="px-5 py-3 font-sans font-bold text-xs sm:text-sm text-[var(--color-primary)] border border-[var(--color-primary)] bg-white hover:bg-[var(--color-bg)] transition-all rounded-full w-full sm:w-auto">
                       Breathe Protocol
                     </button>
-                    <button className="px-8 py-3.5 font-sans font-bold text-[var(--color-text-secondary)] border border-[var(--color-border)] bg-white hover:bg-[var(--color-bg)] transition-all duration-300">
+                    <button className="px-5 py-3 font-sans font-bold text-xs sm:text-sm text-[var(--color-text-secondary)] border border-[var(--color-border)] bg-white hover:bg-[var(--color-bg)] transition-all rounded-full w-full sm:w-auto">
                       Log to Journal
                     </button>
                   </>
