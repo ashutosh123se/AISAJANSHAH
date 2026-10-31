@@ -145,8 +145,10 @@ async function createStudent({ email, password, name, phone, workshop, sendEmail
   let emailStatus = 'skipped';
   if (sendEmail) {
     try {
-      await mailer.sendWelcomeEmail(email, name, password);
+      const mailResult = await mailer.sendWelcomeEmail(email, name, password);
       emailStatus = 'sent';
+      const providerLabel = mailResult?.provider || 'Email Service';
+      const fromLabel = mailResult?.from || 'system';
       store.emailLogs.unshift({
         id: `log-${Date.now()}`,
         to: email,
@@ -154,7 +156,7 @@ async function createStudent({ email, password, name, phone, workshop, sendEmail
         subject: 'Welcome to AI Sajan Shah - Your Account Credentials',
         sentAt: new Date().toISOString(),
         status: 'sent',
-        note: 'Delivered via Gmail SMTP (team.sajanshah@gmail.com)',
+        note: `Delivered via ${providerLabel} (${fromLabel})`,
       });
     } catch (sendErr) {
       console.error(`Email send failed for ${email}:`, sendErr.message);
